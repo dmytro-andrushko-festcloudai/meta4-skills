@@ -1,0 +1,21 @@
+let id = app.URL.params?.id || null;
+
+if (app.mode === 'editor') {
+  id = '4e5abfe3-e929-4f7d-ac00-ff47a89e132a';
+}
+
+async function fetchData() {
+  if (!id) return;
+
+  const { error } = await getNomenclature.run({ id });
+
+  if (error) {
+    app.showAlert(error, 'error');
+  }
+}
+
+fetchData();
+
+return {
+  id,
+};

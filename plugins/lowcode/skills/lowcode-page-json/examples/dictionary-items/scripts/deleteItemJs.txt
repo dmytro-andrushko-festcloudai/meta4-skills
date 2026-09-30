@@ -1,0 +1,53 @@
+const CLEAR_DELAY = 100;
+
+return {
+  currentItem: null,
+  loading: false,
+
+  toggleModal(currentItem) {
+    this.currentItem = currentItem;
+    ModalDeleteItem.setOpen(true);
+  },
+
+  async close() {
+    ModalDeleteItem.setOpen(false);
+
+    await new Promise((resolve) => setTimeout(resolve, CLEAR_DELAY));
+
+    if (ModalDeleteItem.open) return;
+
+    this.currentItem = null;
+  },
+
+  getLabel() {
+    return this.currentItem?.name || '';
+  },
+
+  getDescription() {
+    return `Значення "${this.getLabel()}" буде видалено назавжди. Його не можна буде відновити`;
+  },
+
+  async onSubmit() {
+    this.loading = true;
+
+    try {
+      const { data, error } = await deleteDictionaryItem.run({ id: this.currentItem?.fcp_id });
+
+      if (error) throw new Error(error);
+
+      if (!data?.item?.fcp_id) {
+        throw new Error('Не вдалося видалити значення');
+      }
+
+      app.showAlert('Значення успішно видалено', 'success');
+
+      this.close();
+
+      await getDictionaryItems.run();
+    } catch (error) {
+      app.showAlert(error?.message || 'Не вдалося видалити значення', 'error');
+    } finally {
+      this.loading = false;
+    }
+  },
+};

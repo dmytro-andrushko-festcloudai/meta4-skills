@@ -1,0 +1,35 @@
+return {
+  getLines() {
+    if (!mergeJs.canPreview()) return [];
+
+    const rootId = mergeJs.targetId;
+    const source = mergeJs.getSourceNode();
+    const parentId = mergeJs.getTargetParentId();
+    const path = new Set(treeJs.getPath(parentId));
+    const lines = [{ text: treeJs.itemsById[rootId]?.name || '', highlighted: false }];
+
+    const childrenOf = (node, highlighted) => {
+      const children = (node.children || [])
+        .filter((child) => child.id !== source.id)
+        .map((child) => ({ node: child, highlighted }));
+
+      return node.id === parentId && !highlighted ? [...children, { node: source, highlighted: true }] : children;
+    };
+
+    const walk = (entries, prefix) => {
+      entries.forEach(({ node, highlighted }, index) => {
+        const isLast = index === entries.length - 1;
+
+        lines.push({ text: `${prefix}${isLast ? '└── ' : '├── '}${node.label}`, highlighted });
+
+        if (highlighted || path.has(node.id)) {
+          walk(childrenOf(node, highlighted), `${prefix}${isLast ? '    ' : '│   '}`);
+        }
+      });
+    };
+
+    walk(childrenOf({ id: rootId, children: treeJs.getNodes(rootId) }, false), '');
+
+    return lines.map((line, index) => ({ id: index + 1, ...line }));
+  },
+};

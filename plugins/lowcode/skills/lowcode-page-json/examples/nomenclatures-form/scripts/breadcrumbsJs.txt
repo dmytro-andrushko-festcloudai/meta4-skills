@@ -1,0 +1,27 @@
+return {
+  getBreadcrumbs() {
+    const home = { id: 'home', label: 'Товари' };
+
+    if (!initJs.id) {
+      return [home, { id: 'current', label: 'Створення товару' }];
+    }
+
+    return [
+      home,
+      { id: initJs.id, label: formJs.getItem()?.name || 'Завантаження...' },
+      { id: 'current', label: 'Редагування товару' },
+    ];
+  },
+
+  onNavigate(id) {
+    if (id === 'home') {
+      app.navigate(constantsJs.basePath);
+    } else if (id !== 'current') {
+      app.navigate(`${constantsJs.basePath}/${id}`);
+    }
+  },
+
+  onBack() {
+    app.navigate(initJs.id ? `${constantsJs.basePath}/${initJs.id}` : constantsJs.basePath);
+  },
+};

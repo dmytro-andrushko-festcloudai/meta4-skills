@@ -1,0 +1,14 @@
+return {
+  getData() {
+    const item = nomenclatureJs.getItem() || {};
+    const { text, yesNo } = nomenclatureJs;
+    const uktzed = item.nomenclatures_code_uktzed_fcp_id_codes_uktzed;
+
+    return [
+      { id: 'uktzed', label: 'Код УКТЗЕД', value: text(uktzed?.code) },
+      { id: 'vat_rate', label: 'Ставка ПДВ', value: text(item.vat_rate) },
+      { id: 'vat_relief', label: 'Пільга по ПДВ', value: text(item.vat_relief) },
+      { id: 'excise', label: 'Акцизний товар', value: yesNo(item.excise_applicable) },
+    ];
+  },
+};

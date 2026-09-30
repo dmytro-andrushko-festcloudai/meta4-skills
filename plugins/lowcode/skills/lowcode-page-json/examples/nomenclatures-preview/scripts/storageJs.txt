@@ -1,0 +1,24 @@
+return {
+  getUnitLabel(unit) {
+    if (!unit) return null;
+
+    return unit.full_name && unit.name ? `${unit.full_name} (${unit.name})` : unit.full_name || unit.name;
+  },
+
+  getUnitOfMeasure(item) {
+    return this.getUnitLabel(item.nomenclatures_unit_of_measure_fcp_id_units_of_measure);
+  },
+
+  getData() {
+    const item = nomenclatureJs.getItem() || {};
+    const { text, temperature } = nomenclatureJs;
+
+    return [
+      { id: 'shelf_life', label: 'Термін придатності', value: text(item.shelf_life) },
+      { id: 'temperature_from', label: 'Температура зберігання від', value: temperature(item.storing_temperature_from) },
+      { id: 'temperature_to', label: 'Температура зберігання до', value: temperature(item.storing_temperature_to) },
+      { id: 'unit', label: 'Одиниці виміру', value: text(this.getUnitOfMeasure(item)) },
+      { id: 'barcode', label: 'Штрих код', value: text(item.barcode) },
+    ];
+  },
+};

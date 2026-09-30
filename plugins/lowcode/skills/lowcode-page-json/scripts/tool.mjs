@@ -16,6 +16,9 @@ const work = path.join(tmpdir(), 'lowcode-page-json');
 const usage = `usage:
   node tool.mjs build <page.ts> <out.json>
   node tool.mjs validate <page.json>
+  node tool.mjs app <name> <viewsDir> [--out apps/lowcode/src/pages]
+    build + validate every <viewsDir>/<view>/page.ts into <out>/<name>/schemas/<view>.json,
+    create the schemas index and view wrapper if missing, print the routes to register
   node tool.mjs props <BlockType>
   node tool.mjs render <route | page.json> <out.png> [--width 1232] [--height 1000] [--token <jwt>]
     a .json argument renders that page directly, no route registration needed`;
@@ -45,33 +48,114 @@ const run = (file, args) => {
   process.exitCode = result.status ?? 1;
 };
 
+const runSync = (file, args) => spawnSync(process.execPath, [file, ...args], { stdio: 'inherit' }).status ?? 1;
+
+const buildPage = async (entry, out) => {
+  const outfile = await bundleNode({
+    name: 'build',
+    build: {
+      stdin: {
+        contents: `import page from ${JSON.stringify(path.resolve(entry))};
+            import { writeFileSync } from 'node:fs';
+            writeFileSync(process.argv[2], JSON.stringify(page, null, 2) + '\\n');
+            console.log('written', process.argv[2]);`,
+        loader: 'ts',
+        resolveDir: root,
+      },
+    },
+  });
+
+  return runSync(outfile, [path.resolve(out)]);
+};
+
+const validatePage = async (file) => {
+  const outfile = await bundleNode({ name: 'validate', build: { entryPoints: [path.join(here, 'validate.ts')] } });
+
+  return runSync(outfile, [path.resolve(file)]);
+};
+
+const pascal = (name) => name.replace(/(^|[-_])(\w)/g, (_, __, c) => c.toUpperCase());
+const camel = (name) => pascal(name).replace(/^\w/, (c) => c.toLowerCase());
+
+const routesOf = (name, view) => {
+  const base = `/${name}`;
+  const known = {
+    list: [base],
+    form: [`${base}/create`, `${base}/:id/edit`],
+    create: [`${base}/create`],
+    edit: [`${base}/:id/edit`],
+    preview: [`${base}/:id`],
+  };
+
+  return known[view] ?? [`${base}/${view}`];
+};
+
 const commands = {
   async build([entry, out]) {
     if (!entry || !out) throw new Error(usage);
 
-    const outfile = await bundleNode({
-      name: 'build',
-      build: {
-        stdin: {
-          contents: `import page from ${JSON.stringify(path.resolve(entry))};
-            import { writeFileSync } from 'node:fs';
-            writeFileSync(process.argv[2], JSON.stringify(page, null, 2) + '\\n');
-            console.log('written', process.argv[2]);`,
-          loader: 'ts',
-          resolveDir: root,
-        },
-      },
-    });
-
-    run(outfile, [path.resolve(out)]);
+    process.exitCode = await buildPage(entry, out);
   },
 
   async validate([file]) {
     if (!file) throw new Error(usage);
 
-    const outfile = await bundleNode({ name: 'validate', build: { entryPoints: [path.join(here, 'validate.ts')] } });
+    process.exitCode = await validatePage(file);
+  },
 
-    run(outfile, [path.resolve(file)]);
+  async app([name, viewsDir, ...rest]) {
+    if (!name || !viewsDir) throw new Error(usage);
+
+    const outFlag = rest.indexOf('--out');
+    const pagesDir = path.resolve(root, outFlag === -1 ? 'apps/lowcode/src/pages' : rest[outFlag + 1]);
+    const appDir = path.join(pagesDir, name);
+    const schemasDir = path.join(appDir, 'schemas');
+    const views = readdirSync(viewsDir).filter((v) => existsSync(path.join(viewsDir, v, 'page.ts')));
+
+    if (views.length === 0) throw new Error(`no <view>/page.ts found in ${viewsDir}`);
+
+    mkdirSync(schemasDir, { recursive: true });
+
+    const failed = [];
+
+    for (const view of views) {
+      const out = path.join(schemasDir, `${view}.json`);
+
+      if ((await buildPage(path.join(viewsDir, view, 'page.ts'), out)) !== 0 || (await validatePage(out)) !== 0) {
+        failed.push(view);
+      }
+    }
+
+    if (failed.length > 0) throw new Error(`fix and re-run, invalid views: ${failed.join(', ')}`);
+
+    const Name = pascal(name);
+    const schemas = `${camel(name)}Schemas`;
+    const indexFile = path.join(schemasDir, 'index.ts');
+    const wrapperFile = path.join(appDir, `${Name}.tsx`);
+
+    if (!existsSync(indexFile)) {
+      const imports = views.map((v) => `import ${camel(v)}Schema from './${v}.json';`).join('\n');
+      const entries = views.map((v) => `  ${camel(v)}: ${camel(v)}Schema as unknown as Data,`).join('\n');
+
+      writeFileSync(
+        indexFile,
+        `import { type Data } from '@puckeditor/core';\n\n${imports}\n\nexport const ${schemas} = {\n${entries}\n};\n\nexport type ${Name}View = keyof typeof ${schemas};\n`
+      );
+    }
+
+    if (!existsSync(wrapperFile)) {
+      writeFileSync(
+        wrapperFile,
+        `import { useParams } from 'react-router';\n\nimport { JsonView } from '../json-view/JsonView';\nimport { ${schemas}, type ${Name}View } from './schemas';\n\ntype ${Name}Props = {\n  view: ${Name}View;\n};\n\nexport const ${Name} = ({ view }: ${Name}Props) => {\n  const { id } = useParams();\n\n  return <JsonView data={${schemas}[view]} viewKey={\`${name}:\${view}:\${id ?? ''}\`} />;\n};\n`
+      );
+    }
+
+    const routes = views.flatMap((v) => routesOf(name, v).map((r) => `    { path: '${r}', element: <${Name} view='${camel(v)}' /> },`));
+
+    console.log(`\nbuilt ${views.length} views into ${path.relative(root, schemasDir)}`);
+    console.log(`add to apps/lowcode/src/app/router.tsx:\n`);
+    console.log(`const ${Name} = lazy(() => import('../pages/${name}/${Name}').then((m) => ({ default: m.${Name} })));\n`);
+    console.log(routes.join('\n'));
   },
 
   async props([type]) {

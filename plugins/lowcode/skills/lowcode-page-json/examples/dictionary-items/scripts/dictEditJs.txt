@@ -1,0 +1,64 @@
+const CLEAR_DELAY = 100;
+
+return {
+  notBlank(field) {
+    return !field?.required || Boolean(field.value?.trim());
+  },
+
+  loading: false,
+
+  getFields() {
+    return [InputEditDictName, InputEditDictCode, RadioEditDictExtensible, InputEditDictDescription];
+  },
+
+  toggleModal() {
+    ModalEditDictionary.setOpen(true);
+  },
+
+  async close() {
+    ModalEditDictionary.setOpen(false);
+
+    await new Promise((resolve) => setTimeout(resolve, CLEAR_DELAY));
+
+    if (ModalEditDictionary.open) return;
+
+    this.getFields().forEach((field) => field?.reset());
+  },
+
+  getDisableSubmit() {
+    const fields = this.getFields();
+
+    return fields.some((field) => !field?.valid) || !fields.some((field) => Boolean(field?.dirty));
+  },
+
+  async onSubmit() {
+    this.loading = true;
+
+    try {
+      const object = {
+        name: InputEditDictName.value?.trim(),
+        code: InputEditDictCode.value?.trim() || null,
+        description: InputEditDictDescription.value?.trim() || null,
+        is_extensible: RadioEditDictExtensible.value === 'yes',
+      };
+
+      const { data, error } = await updateDictionary.run({ id: initJs.id, object });
+
+      if (error) throw new Error(error);
+
+      if (!data?.dictionary?.fcp_id) {
+        throw new Error('Не вдалося оновити словник');
+      }
+
+      app.showAlert(`Словник "${data.dictionary.name}" успішно збережено`, 'success');
+
+      this.close();
+
+      await dictionaryJs.reload();
+    } catch (error) {
+      app.showAlert(error?.message || 'Не вдалося оновити словник', 'error');
+    } finally {
+      this.loading = false;
+    }
+  },
+};

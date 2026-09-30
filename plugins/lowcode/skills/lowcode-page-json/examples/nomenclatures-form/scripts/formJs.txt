@@ -1,0 +1,94 @@
+return {
+  isSubmitting: false,
+
+  getItem() {
+    return getNomenclature.data?.nomenclatures?.[0] || null;
+  },
+
+  notBlank(field) {
+    return !field?.required || Boolean(field.value?.trim());
+  },
+
+  getFields() {
+    return [
+      InputName,
+      InputManufacturer,
+      InputCountry,
+      SelectUnit,
+      InputShelfLife,
+      InputTemperatureFrom,
+      InputTemperatureTo,
+      SelectUktzed,
+      SelectVatRate,
+      InputVatRelief,
+      CheckboxExcise,
+      InputKind,
+      InputPosKind,
+      InputFoodCost,
+      SelectType,
+      InputManager,
+      CheckboxOwnProduction,
+      SelectTaxBenefit,
+    ];
+  },
+
+  isSubmitDisabled() {
+    const fields = this.getFields();
+    const isInvalid = fields.some((field) => !field?.valid);
+
+    if (!initJs.id) return isInvalid;
+
+    return isInvalid || !fields.some((field) => Boolean(field?.dirty));
+  },
+
+  getObject() {
+    const text = (field) => String(field.value ?? '').trim() || null;
+
+    return {
+      name: text(InputName),
+      manufacturer_name: text(InputManufacturer),
+      country_of_origin: text(InputCountry),
+      unit_of_measure_fcp_id: text(SelectUnit),
+      shelf_life: text(InputShelfLife),
+      storing_temperature_from: text(InputTemperatureFrom),
+      storing_temperature_to: text(InputTemperatureTo),
+      code_uktzed_fcp_id: text(SelectUktzed),
+      vat_rate: text(SelectVatRate),
+      vat_relief: text(InputVatRelief),
+      excise_applicable: Boolean(CheckboxExcise.value),
+      nomenclature_kind: text(InputKind),
+      pos_nomenclature_kind: text(InputPosKind),
+      food_cost_type: text(InputFoodCost),
+      nomenclature_type_fcp_id: text(SelectType),
+      responsible_manager: text(InputManager),
+      own_production: Boolean(CheckboxOwnProduction.value),
+      tax_benefit_code: text(SelectTaxBenefit),
+    };
+  },
+
+  async onSubmit() {
+    this.isSubmitting = true;
+
+    try {
+      const object = this.getObject();
+      const { data, error } = initJs.id
+        ? await updateNomenclature.run({ id: initJs.id, object })
+        : await createNomenclature.run({ object });
+
+      if (error) throw new Error(error);
+
+      const id = data?.nomenclature?.fcp_id;
+
+      if (!id) {
+        throw new Error(initJs.id ? 'Не вдалося оновити товар' : 'Не вдалося створити товар');
+      }
+
+      app.showAlert(initJs.id ? 'Товар успішно оновлено' : 'Товар успішно створено', 'success');
+      app.navigate(initJs.id ? `${constantsJs.basePath}/${id}` : `${constantsJs.basePath}/${id}?from=create`);
+    } catch (error) {
+      app.showAlert(error?.message || 'Не вдалося зберегти товар', 'error');
+    } finally {
+      this.isSubmitting = false;
+    }
+  },
+};

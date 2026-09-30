@@ -56,11 +56,13 @@ Readable in bindings: `app.URL` (`.pathname`, `.query`, `.params`, `.base`), `ap
 
 Server-side list (from `legal-entities/schemas/list.json`): the query takes `offset`, `limit`, `order_by`, `where` built in its `variables` binding from `Table1` page/size state, the search `Input1.value` and filter widgets, plus a `<root>_aggregate` field for the total. The Table binds `data` to `{{ getX.data.<alias> }}`, `totalCount` to `{{ getX.data.total.aggregate.count }}`, `serverSidePagination: true`, and `onPageChange` to `{{ getX.run() }}`. Re-run the query after changing filters and reset with `Table1.setPage(1)`.
 
-Forms (create/edit) live in `create.json` / `edit.json`: an `initJs` script reads `app.URL.params.id`, runs the lookup queries in `Promise.all`, and a `formJs` script computes `isSubmitDisabled()` from each field's `valid` and `dirty` and performs the mutations. Read `create.json` when a page needs a form; do not reinvent it.
+Forms: `examples/nomenclatures-form` serves create and edit from one page. `initJs` reads `app.URL.params.id` and loads the record when present, lookup queries run on page load, and `formJs` computes the submit-disabled state from each field's `valid` and `dirty` and performs the mutations. `legal-entities` splits the same thing into `create.json` and `edit.json`. Do not reinvent either.
+
+Modals (`examples/dictionary-items`): one script per modal owns `currentItem`, `toggleModal(item)`, `close()`, `onSubmit()` and a `loading` flag; the modal's fields are reset after the close animation, and the list is re-fetched after a successful mutation.
 
 ## Mock-first data
 
-When the API is not ready, put the data in a script and bind to it exactly as if it were a query result, so swapping in the real query changes only the binding: `data: '{{ vacanciesJs.requests }}'` becomes `'{{ getRequests.data.requests }}'`. `examples/vacancies.script.txt` shows the pattern, including computed values (plural forms, a ring SVG). Always say in the report which parts are mock.
+When the API is not ready, put the data in a script and bind to it exactly as if it were a query result, so swapping in the real query changes only the binding: `data: '{{ itemsJs.rows }}'` becomes `'{{ getItems.data.items }}'`. `examples/nomenclatures-preview/scripts/*.txt` shows the shape: small scripts that return the label/value rows a `Repeater` renders. Always say in the report which parts are mock.
 
 ## Hasura notes
 

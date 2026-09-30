@@ -1,0 +1,16 @@
+return {
+  getBreadcrumbs() {
+    const item = nomenclatureJs.getItem();
+
+    return [
+      { id: 'home', label: 'Товари' },
+      { id: item?.fcp_id || 'current', label: item?.name || 'Завантаження...' },
+    ];
+  },
+
+  onNavigate(id) {
+    if (id === 'home') {
+      navigationJs.goToList();
+    }
+  },
+};

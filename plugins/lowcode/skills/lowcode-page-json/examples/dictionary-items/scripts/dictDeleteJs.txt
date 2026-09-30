@@ -1,0 +1,64 @@
+return {
+  loading: false,
+
+  toggleModal() {
+    ModalDeleteDictionary.setOpen(true);
+  },
+
+  close() {
+    ModalDeleteDictionary.setOpen(false);
+  },
+
+  getItemsCount() {
+    return dictionaryJs.getDictionary()?.total?.aggregate?.count ?? 0;
+  },
+
+  getItemsLabel(count) {
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+
+    if (lastDigit >= 1 && lastDigit <= 4 && (lastTwoDigits < 11 || lastTwoDigits > 14)) {
+      return `${count} значення`;
+    }
+
+    return `${count} значень`;
+  },
+
+  getDescription() {
+    const name = dictionaryJs.getDictionary()?.name || '';
+    const count = this.getItemsCount();
+
+    if (!count) {
+      return `Словник "${name}" буде видалено назавжди. Його не можна буде відновити`;
+    }
+
+    return `Словник "${name}" та ${this.getItemsLabel(count)} у ньому будуть видалені назавжди. Їх не можна буде відновити`;
+  },
+
+  async onSubmit() {
+    this.loading = true;
+
+    try {
+      const { error: itemsError } = await deleteDictionaryItems.run({ id: initJs.id });
+
+      if (itemsError) throw new Error(itemsError);
+
+      const { data, error } = await deleteDictionary.run({ id: initJs.id });
+
+      if (error) throw new Error(error);
+
+      if (!data?.dictionary?.fcp_id) {
+        throw new Error('Не вдалося видалити словник');
+      }
+
+      app.showAlert('Словник успішно видалено', 'success');
+
+      this.close();
+      dictionaryJs.goToList();
+    } catch (error) {
+      app.showAlert(error?.message || 'Не вдалося видалити словник', 'error');
+    } finally {
+      this.loading = false;
+    }
+  },
+};

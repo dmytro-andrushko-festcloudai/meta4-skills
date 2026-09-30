@@ -1,0 +1,19 @@
+return {
+  getDictionary() {
+    return getDictionary.data?.dictionaries?.[0] || null;
+  },
+
+  canAddItems() {
+    return Boolean(this.getDictionary()?.is_extensible);
+  },
+
+  goToList() {
+    app.navigate(constantsJs.basePath);
+  },
+
+  async reload() {
+    const { error } = await getDictionary.run({ id: initJs.id });
+
+    if (error) app.showAlert(error, 'error');
+  },
+};

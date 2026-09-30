@@ -33,9 +33,11 @@ export const node = (type: string, props: Props = {}): Node => {
 
   counters[type] = (counters[type] ?? 0) + 1;
 
+  const { name, ...rest } = props;
+
   return {
     type,
-    props: { ...withDefaults(props, shape), id: `${type}-${randomUUID()}`, name: `${type}${counters[type]}` },
+    props: { ...withDefaults(rest, shape), id: `${type}-${randomUUID()}`, name: name ?? `${type}${counters[type]}` },
   };
 };
 

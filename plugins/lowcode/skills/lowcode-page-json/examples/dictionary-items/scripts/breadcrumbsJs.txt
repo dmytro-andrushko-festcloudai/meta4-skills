@@ -1,0 +1,14 @@
+return {
+  getBreadcrumbs() {
+    return [
+      { id: 'home', label: 'Реєстр Словників' },
+      { id: 'current', label: dictionaryJs.getDictionary()?.name || (getDictionary.loading ? 'Завантаження...' : '') },
+    ];
+  },
+
+  onNavigate(id) {
+    if (id === 'home') {
+      dictionaryJs.goToList();
+    }
+  },
+};

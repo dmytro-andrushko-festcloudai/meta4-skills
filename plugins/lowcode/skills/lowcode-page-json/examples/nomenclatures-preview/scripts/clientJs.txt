@@ -1,0 +1,18 @@
+return {
+  getData() {
+    const item = nomenclatureJs.getItem() || {};
+    const { text, yesNo } = nomenclatureJs;
+    const type = item.nomenclatures_nomenclature_type_fcp_id_nomenclature_types;
+    const product = item.nomenclatures_product_fcp_id_products;
+
+    return [
+      { id: 'kind', label: 'Вид номенклатури', value: text(item.nomenclature_kind) },
+      { id: 'pos_kind', label: 'Вид номенклатури для ФКА', value: text(item.pos_nomenclature_kind) },
+      { id: 'type', label: 'Тип номенклатури', value: text(type?.name) },
+      { id: 'food_cost', label: 'Фудкост', value: text(item.food_cost_type) },
+      { id: 'product', label: 'Код продукції', value: text(product?.external || product?.name) },
+      { id: 'manager', label: 'Відповідальний менеджер', value: text(item.responsible_manager) },
+      { id: 'own_production', label: 'Продукція власного виробництва', value: yesNo(item.own_production) },
+    ];
+  },
+};

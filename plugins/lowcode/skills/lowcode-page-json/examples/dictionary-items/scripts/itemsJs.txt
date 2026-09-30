@@ -1,0 +1,22 @@
+return {
+  async getData() {
+    TableItems.setPage(1);
+
+    await getDictionaryItems.run();
+  },
+
+  getWhere() {
+    const search = InputSearch.value?.trim();
+    const filters = [{ dictionary_fcp_id: { _eq: initJs.id } }];
+
+    if (search) {
+      filters.push({
+        _or: [{ name: { _ilike: `%${search}%` } }, { code: { _ilike: `%${search}%` } }],
+      });
+    }
+
+    filters.push(...filterJs.getConditions());
+
+    return { _and: filters };
+  },
+};

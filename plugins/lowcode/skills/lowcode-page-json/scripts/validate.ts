@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 import { compileFailure } from '../../../../apps/lowcode/src/engine/core/eval/compile';
-import { shapeOf } from '../../../../apps/lowcode/src/runtime/registry/blocks';
+import { blocks, shapeOf } from '../../../../apps/lowcode/src/runtime/registry/blocks';
 import { shapeInfo, slotsOf } from '../../../../apps/lowcode/src/runtime/shape-info';
 
 type PageNode = { props: Record<string, unknown>; type: string };
@@ -62,6 +62,19 @@ const visit = (n: PageNode, path: string) => {
 
     value.forEach((child) => visit(child, `${where}.${key}`));
   }
+
+  for (const [key, value] of Object.entries(n.props)) {
+    if (!slots.has(key)) visitEmbedded(value, `${where}.${key}`);
+  }
+};
+
+const isNode = (value: unknown): value is PageNode =>
+  Boolean(value) && typeof value === 'object' && typeof (value as PageNode).type === 'string' && 'props' in (value as object);
+
+const visitEmbedded = (value: unknown, path: string) => {
+  if (isNode(value)) visit(value, path);
+  else if (Array.isArray(value)) value.forEach((item) => visitEmbedded(item, path));
+  else if (value && typeof value === 'object') Object.entries(value).forEach(([key, item]) => visitEmbedded(item, `${path}.${key}`));
 };
 
 data.content.forEach((n: PageNode) => visit(n, 'content'));
@@ -84,6 +97,47 @@ for (const q of root.queries ?? []) {
   for (const field of ['endpoint', 'headers', 'variables', 'url', 'body']) {
     if (typeof q[field] === 'string') checkBinding(q[field], `query ${q.name}.${field}`);
   }
+}
+
+const defined = new Set<string>([
+  ...referenced,
+  ...(root.scripts ?? []).map((s: { name: string }) => s.name),
+  ...(root.queries ?? []).map((q: { name: string }) => q.name),
+]);
+const blockPrefix = new RegExp(`^(${Object.keys(blocks).join('|')})[A-Za-z0-9]*$`);
+const queryCall = /\b([A-Za-z_]\w*)\.(?:run|data|loading|error)\b/g;
+const scriptCall = /\b([A-Za-z_]\w*Js)\./g;
+const blockCall =
+  /\b([A-Z]\w*)\.(?:value|values|setValue|setValues|reset|valid|dirty|page|pageSize|setPage|open|setOpen|selectedValue|setSelectedValue|selectedRow)\b/g;
+
+const checkReferences = (code: string, where: string) => {
+  const flag = (pattern: RegExp, kind: string, accept: (name: string) => boolean) => {
+    for (const match of code.matchAll(pattern)) {
+      if (accept(match[1]) && !defined.has(match[1])) problems.push(`${where}: ${kind} "${match[1]}" is not defined on this page`);
+    }
+  };
+
+  flag(scriptCall, 'script', () => true);
+  flag(queryCall, 'query', (name) => /^(get|create|update|delete|save|remove|fetch|load)[A-Z]/.test(name));
+  flag(blockCall, 'block', (name) => blockPrefix.test(name));
+};
+
+const scan = (value: unknown, where: string) => {
+  if (typeof value === 'string' && value.includes('{{')) {
+    for (const match of value.matchAll(/\{\{([\s\S]*?)\}\}/g)) checkReferences(match[1], where);
+  } else if (Array.isArray(value)) {
+    value.forEach((item) => scan(item, where));
+  } else if (value && typeof value === 'object') {
+    Object.values(value).forEach((item) => scan(item, where));
+  }
+};
+
+scan(data.content, 'content');
+
+for (const s of root.scripts ?? []) checkReferences(s.code, `script ${s.name}`);
+
+for (const q of root.queries ?? []) {
+  for (const field of ['endpoint', 'headers', 'variables', 'url', 'body']) scan(q[field], `query ${q.name}.${field}`);
 }
 
 console.log(`nodes: ${nodes}, bindings: ${bindings}, scripts: ${(root.scripts ?? []).length}, queries: ${(root.queries ?? []).length}`);

@@ -1,0 +1,106 @@
+return {
+  selectedFilters: { names: [], manufacturers: [], countries: [] },
+
+  widgetsOf(id) {
+    const groups = { name: CheckboxGroupName, manufacturer: CheckboxGroupManufacturer, country: CheckboxGroupCountry };
+    const searches = { name: InputFilterName, manufacturer: InputFilterManufacturer, country: InputFilterCountry };
+
+    return { group: groups[id], search: searches[id] };
+  },
+
+  getSearchVariables() {
+    const toPattern = (input) => `%${input.value?.trim() || ''}%`;
+
+    return {
+      nameSearch: toPattern(InputFilterName),
+      manufacturerSearch: toPattern(InputFilterManufacturer),
+      countrySearch: toPattern(InputFilterCountry),
+    };
+  },
+
+  toOptions(rows, key) {
+    return (rows || [])
+      .filter((row) => row[key]?.trim())
+      .map((row) => ({ value: row[key], label: row[key].trim() }));
+  },
+
+  getNameOptions() {
+    return this.toOptions(getFilters.data?.names, 'name');
+  },
+
+  getManufacturerOptions() {
+    return this.toOptions(getFilters.data?.manufacturers, 'manufacturer_name');
+  },
+
+  getCountryOptions() {
+    return this.toOptions(getFilters.data?.countries, 'country_of_origin');
+  },
+
+  onSearch() {
+    getFilters.run();
+  },
+
+  getDraft() {
+    return {
+      names: CheckboxGroupName.values || [],
+      manufacturers: CheckboxGroupManufacturer.values || [],
+      countries: CheckboxGroupCountry.values || [],
+    };
+  },
+
+  onClose() {
+    CheckboxGroupName.setValues(this.selectedFilters.names);
+    CheckboxGroupManufacturer.setValues(this.selectedFilters.manufacturers);
+    CheckboxGroupCountry.setValues(this.selectedFilters.countries);
+  },
+
+  onApply() {
+    this.selectedFilters = this.getDraft();
+
+    tableJs.getData();
+  },
+
+  onClearCategory(id) {
+    const { group, search } = this.widgetsOf(id);
+
+    group?.reset();
+
+    if (search?.value) {
+      search.setValue('');
+      getFilters.run();
+    }
+  },
+
+  onClear() {
+    ['name', 'manufacturer', 'country'].forEach((id) => this.onClearCategory(id));
+  },
+
+  onQuickClear() {
+    this.onClear();
+
+    this.selectedFilters = { names: [], manufacturers: [], countries: [] };
+
+    tableJs.getData();
+  },
+
+  isActive() {
+    return Object.values(this.selectedFilters).some((values) => values.length > 0);
+  },
+
+  selectedQty() {
+    const total = Object.values(this.selectedFilters).reduce((sum, values) => sum + values.length, 0);
+
+    return total > 99 ? '99+' : total;
+  },
+
+  isEmpty() {
+    return Object.values(this.getDraft()).every((values) => values.length === 0);
+  },
+
+  isChanged() {
+    const draft = this.getDraft();
+    const isSame = (a, b) => a.length === b.length && a.every((value) => b.includes(value));
+
+    return Object.keys(this.selectedFilters).some((key) => !isSame(draft[key], this.selectedFilters[key]));
+  },
+};

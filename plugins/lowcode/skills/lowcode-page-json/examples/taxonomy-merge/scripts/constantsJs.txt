@@ -1,0 +1,8 @@
+const params = app.URL;
+const lng = params?.lng || 'uk';
+
+return {
+  GRAPHQL_URL: 'https://hasura-qa.srv.festcloud.ai/v1/graphql',
+
+  basePath: `/${lng}/low-code/taxonomies`,
+};

@@ -1,0 +1,18 @@
+return {
+  getBreadcrumbs() {
+    return [
+      { id: 'home', label: 'Менеджер таксономії' },
+      { id: 'merge', label: 'Об’єднання таксономії' },
+    ];
+  },
+
+  onNavigate(id) {
+    if (id === 'home') {
+      app.navigate(constantsJs.basePath);
+    }
+  },
+
+  onBack() {
+    app.navigate(constantsJs.basePath);
+  },
+};

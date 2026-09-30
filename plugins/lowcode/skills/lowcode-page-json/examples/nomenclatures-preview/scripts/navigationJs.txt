@@ -1,0 +1,17 @@
+return {
+  isFromCreate() {
+    return app.URL.query?.from === 'create';
+  },
+
+  goToList() {
+    app.navigate(constantsJs.basePath);
+  },
+
+  goToEdit() {
+    const id = nomenclatureJs.getItem()?.fcp_id;
+
+    if (id) {
+      app.navigate(`${constantsJs.basePath}/${id}/edit`);
+    }
+  },
+};

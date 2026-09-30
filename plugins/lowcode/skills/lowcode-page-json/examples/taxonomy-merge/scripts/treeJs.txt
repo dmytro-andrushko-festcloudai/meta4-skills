@@ -1,0 +1,103 @@
+return {
+  loading: false,
+  itemsById: {},
+  childrenOf: {},
+  rootIds: [],
+
+  async reload({ notify = true } = {}) {
+    this.loading = true;
+
+    try {
+      const { data, error } = await getTaxonomies.run();
+
+      if (error) throw new Error(error);
+
+      this.build(data?.taxonomies || []);
+
+      return true;
+    } catch (error) {
+      if (notify) {
+        app.showAlert(error?.message || 'Не вдалося завантажити таксономії', 'error');
+      }
+
+      return false;
+    } finally {
+      this.loading = false;
+    }
+  },
+
+  build(rawData) {
+    const itemsById = {};
+    const childrenOf = {};
+    const rootIds = [];
+
+    rawData.forEach((item) => {
+      itemsById[item.fcp_id] = item;
+    });
+
+    rawData.forEach((item) => {
+      if (item.parent_fcp_id && itemsById[item.parent_fcp_id]) {
+        childrenOf[item.parent_fcp_id] = [...(childrenOf[item.parent_fcp_id] || []), item];
+      } else {
+        rootIds.push(item.fcp_id);
+      }
+    });
+
+    this.itemsById = itemsById;
+    this.childrenOf = childrenOf;
+    this.rootIds = rootIds;
+  },
+
+  getNodes(parentId) {
+    if (!parentId) return [];
+
+    return (this.childrenOf[parentId] || []).map((item) => {
+      const children = this.getNodes(item.fcp_id);
+      const node = { id: item.fcp_id, label: item.name, item, icon: children.length > 0 ? 'BookOpen' : 'Tag' };
+
+      if (children.length > 0) {
+        node.children = children;
+      }
+
+      return node;
+    });
+  },
+
+  flatten(nodes) {
+    return nodes.flatMap((node) => [node, ...this.flatten(node.children || [])]);
+  },
+
+  findNode(nodes, id) {
+    if (!id) return null;
+
+    return this.flatten(nodes).find((node) => node.id === id) || null;
+  },
+
+  countNodes(parentId) {
+    return (this.childrenOf[parentId] || []).reduce((sum, item) => sum + 1 + this.countNodes(item.fcp_id), 0);
+  },
+
+  getPath(id) {
+    const path = [];
+    let current = this.itemsById[id];
+
+    while (current) {
+      path.unshift(current.fcp_id);
+      current = this.itemsById[current.parent_fcp_id];
+    }
+
+    return path;
+  },
+
+  getRootOptions(excludeId) {
+    return this.rootIds
+      .filter((id) => id !== excludeId)
+      .map((id) => {
+        const { name, type } = this.itemsById[id];
+        const label = type ? `${name} (${type})` : name;
+
+        return { value: id, label: `${label} - ${this.countNodes(id)} nodes` };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
+  },
+};

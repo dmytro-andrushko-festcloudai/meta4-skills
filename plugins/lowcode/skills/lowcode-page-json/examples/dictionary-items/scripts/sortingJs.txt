@@ -1,0 +1,28 @@
+return {
+  selectedSort: '',
+
+  options: [
+    { value: 'name:asc', label: 'Сортувати за назвою від А-Я' },
+    { value: 'name:desc', label: 'Сортувати за назвою від Я-А' },
+  ],
+
+  getItems(selectedValue) {
+    return this.options.map((option) => ({ ...option, selected: selectedValue === option.value }));
+  },
+
+  getOrderBy() {
+    const [field, direction] = (MenuSorting.selectedValue || '').split(':');
+
+    return field ? [{ [field]: `${direction}_nulls_last` }] : [{ audit_updated_at: 'desc_nulls_last' }];
+  },
+
+  async onSort() {
+    if (MenuSorting.selectedValue === this.selectedSort) {
+      MenuSorting.setSelectedValue('');
+    }
+
+    this.selectedSort = MenuSorting.selectedValue;
+
+    await itemsJs.getData();
+  },
+};

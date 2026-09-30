@@ -1,0 +1,25 @@
+let id = app.URL.params?.id || null;
+
+if (app.mode === 'editor') {
+  id = "e28ba2c0-ba5a-4e2a-a473-02c22253ae2e";
+}
+
+async function fetchData() {
+  if (!id) return;
+
+  const { error } = await getDictionary.run({ id });
+
+  if (error) {
+    app.showAlert(error, 'error');
+
+    return;
+  }
+
+  await itemsJs.getData();
+}
+
+fetchData();
+
+return {
+  id,
+};

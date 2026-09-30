@@ -1,0 +1,13 @@
+return {
+  getData() {
+    const item = nomenclatureJs.getItem() || {};
+    const { text } = nomenclatureJs;
+
+    return [
+      { id: 'name', label: 'Назва продукту', value: text(item.name) },
+      { id: 'manufacturer', label: 'Виробник', value: text(item.manufacturer_name) },
+      { id: 'country', label: 'Країна походження', value: text(item.country_of_origin) },
+      { id: 'sku', label: 'SKU', value: text(item.sku) },
+    ];
+  },
+};

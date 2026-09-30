@@ -1,0 +1,102 @@
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+return {
+  selectedFilters: { name: [], status: [] },
+
+  widgetsOf(id) {
+    const groups = { name: CheckboxGroupName, status: CheckboxGroupStatus };
+    const searches = { name: InputFilterName };
+
+    return { group: groups[id], search: searches[id] };
+  },
+
+  getLetterOptions(id) {
+    const search = this.widgetsOf(id).search?.value?.trim().toUpperCase() || '';
+
+    return ALPHABET.filter((letter) => letter.includes(search)).map((letter) => ({ value: letter, label: letter }));
+  },
+
+  getStatusOptions() {
+    return [
+      { value: 'active', label: 'Активний' },
+      { value: 'inactive', label: 'Не активний' },
+    ];
+  },
+
+  onLetterSearch() {
+  },
+
+  getDraft() {
+    return {
+      name: CheckboxGroupName.values || [],
+      status: CheckboxGroupStatus.values || [],
+    };
+  },
+
+  getConditions() {
+    const { name, status } = this.selectedFilters;
+    const conditions = [];
+
+    if (name.length > 0) {
+      conditions.push({ name: { _iregex: `^[${name.join('')}]` } });
+    }
+
+    if (status.length === 1) {
+      conditions.push({ is_active: { _eq: status[0] === 'active' } });
+    }
+
+    return conditions;
+  },
+
+  onClose() {
+    CheckboxGroupName.setValues(this.selectedFilters.name);
+    CheckboxGroupStatus.setValues(this.selectedFilters.status);
+  },
+
+  onApply() {
+    this.selectedFilters = this.getDraft();
+
+    itemsJs.getData();
+  },
+
+  onClearCategory(id) {
+    const { group, search } = this.widgetsOf(id);
+
+    group?.reset();
+
+    if (search?.value) search.setValue('');
+  },
+
+  onClear() {
+    ['name', 'status'].forEach((id) => this.onClearCategory(id));
+  },
+
+  onQuickClear() {
+    this.onClear();
+
+    this.selectedFilters = { name: [], status: [] };
+
+    itemsJs.getData();
+  },
+
+  isActive() {
+    return Object.values(this.selectedFilters).some((values) => values.length > 0);
+  },
+
+  selectedQty() {
+    const total = Object.values(this.selectedFilters).reduce((sum, values) => sum + values.length, 0);
+
+    return total > 99 ? '99+' : total;
+  },
+
+  isEmpty() {
+    return Object.values(this.getDraft()).every((values) => values.length === 0);
+  },
+
+  isChanged() {
+    const draft = this.getDraft();
+    const isSame = (a, b) => a.length === b.length && a.every((value) => b.includes(value));
+
+    return Object.keys(this.selectedFilters).some((key) => !isSame(draft[key], this.selectedFilters[key]));
+  },
+};

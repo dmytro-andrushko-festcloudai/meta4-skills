@@ -1,0 +1,23 @@
+return {
+  getItem() {
+    return getNomenclature.data?.nomenclatures?.[0] || null;
+  },
+
+  text(value) {
+    if (value === null || value === undefined) return '—';
+
+    return String(value).trim() || '—';
+  },
+
+  yesNo(value) {
+    if (value === null || value === undefined) return '—';
+
+    return value ? 'Так' : 'Ні';
+  },
+
+  temperature(value) {
+    const text = this.text(value);
+
+    return /^[-+]?\d+([.,]\d+)?$/.test(text) ? `${text} (°C)` : text;
+  },
+};

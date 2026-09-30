@@ -1,0 +1,57 @@
+return {
+  async getData() {
+    TableNomenclatures.setPage(1);
+
+    await getNomenclatures.run();
+  },
+
+  getVariables() {
+    const search = InputSearch.value?.trim();
+    const { names, manufacturers, countries } = filterJs.selectedFilters;
+    const pageSize = TableNomenclatures.pageSize || 15;
+    const filters = [];
+
+    if (search) {
+      filters.push({ name: { _ilike: `%${search}%` } });
+    }
+
+    if (names.length > 0) {
+      filters.push({ name: { _in: names } });
+    }
+
+    if (manufacturers.length > 0) {
+      filters.push({ manufacturer_name: { _in: manufacturers } });
+    }
+
+    if (countries.length > 0) {
+      filters.push({ country_of_origin: { _in: countries } });
+    }
+
+    return {
+      offset: ((TableNomenclatures.page || 1) - 1) * pageSize,
+      limit: pageSize,
+      order_by: sortingJs.getOrderBy(),
+      where: { _and: filters },
+    };
+  },
+
+  getRowActions() {
+    return [
+      { value: 'edit', label: 'Редагувати', icon: 'PencilSimple' },
+    ];
+  },
+
+  onMenuClick(value, item) {
+    if (value === 'edit') {
+      app.navigate(`${constantsJs.basePath}/${item.fcp_id}/edit`);
+    }
+  },
+
+  onCreate() {
+    app.navigate(`${constantsJs.basePath}/create`);
+  },
+
+  onPreview(item) {
+    app.navigate(`${constantsJs.basePath}/${item.fcp_id}`);
+  },
+};

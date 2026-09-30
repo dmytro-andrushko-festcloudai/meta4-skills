@@ -1,0 +1,62 @@
+return {
+  unique(options) {
+    const seen = new Set();
+
+    return options.filter((option) => {
+      if (option.value === null || option.value === undefined || option.value === '' || seen.has(option.value)) {
+        return false;
+      }
+
+      seen.add(option.value);
+
+      return true;
+    });
+  },
+
+  fromValues(rows, field) {
+    return this.unique((rows || []).map((row) => ({ value: row[field], label: String(row[field]).trim() })));
+  },
+
+  getUnitLabel(unit) {
+    if (!unit) return null;
+
+    return unit.full_name && unit.name ? `${unit.full_name} (${unit.name})` : unit.full_name || unit.name;
+  },
+
+  getUnitOptions() {
+    return this.unique(
+      (getDictionaries.data?.units || []).map((unit) => ({ value: unit.fcp_id, label: this.getUnitLabel(unit) || unit.fcp_id }))
+    );
+  },
+
+  getUktzedOptions() {
+    return this.unique(
+      (getDictionaries.data?.uktzed || []).map(({ fcp_id, code }) => ({ value: fcp_id, label: code || fcp_id }))
+    );
+  },
+
+  getVatRateOptions() {
+    const options = [
+      { value: '20%', label: '20% (базова)' },
+      { value: '7%', label: '7%' },
+      { value: '0%', label: '0%' },
+    ];
+    const current = formJs.getItem()?.vat_rate;
+
+    if (current && !options.some(({ value }) => value === current)) {
+      options.push({ value: current, label: current });
+    }
+
+    return options;
+  },
+
+  getTypeOptions() {
+    return this.unique(
+      (getDictionaries.data?.types || []).map(({ fcp_id, name }) => ({ value: fcp_id, label: name || fcp_id }))
+    );
+  },
+
+  getTaxBenefitOptions() {
+    return this.fromValues(getDictionaries.data?.taxBenefits, 'tax_benefit_code');
+  },
+};

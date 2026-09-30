@@ -1,0 +1,73 @@
+const CLEAR_DELAY = 100;
+
+return {
+  notBlank(field) {
+    return !field?.required || Boolean(field.value?.trim());
+  },
+
+  currentItem: null,
+  loading: false,
+
+  getFields() {
+    return [InputItemName, InputItemCode, RadioItemStatus, InputItemDescription];
+  },
+
+  toggleModal(currentItem) {
+    this.currentItem = currentItem ?? null;
+    ModalItem.setOpen(true);
+  },
+
+  async close() {
+    ModalItem.setOpen(false);
+
+    await new Promise((resolve) => setTimeout(resolve, CLEAR_DELAY));
+
+    if (ModalItem.open) return;
+
+    this.getFields().forEach((field) => field?.reset());
+    this.currentItem = null;
+  },
+
+  getDisableSubmit() {
+    const fields = this.getFields();
+
+    return fields.some((field) => !field?.valid) || !fields.some((field) => Boolean(field?.dirty));
+  },
+
+  async onSubmit() {
+    this.loading = true;
+
+    try {
+      const object = {
+        name: InputItemName.value?.trim(),
+        code: InputItemCode.value?.trim() || null,
+        description: InputItemDescription.value?.trim() || null,
+        is_active: RadioItemStatus.value === 'active',
+      };
+
+      const isEdit = Boolean(this.currentItem);
+      const { data, error } = isEdit
+        ? await updateDictionaryItem.run({ id: this.currentItem.fcp_id, object })
+        : await createDictionaryItem.run({ object: { ...object, dictionary_fcp_id: initJs.id } });
+
+      if (error) throw new Error(error);
+
+      if (!data?.item?.fcp_id) {
+        throw new Error(isEdit ? 'Не вдалося оновити значення' : 'Не вдалося створити значення');
+      }
+
+      app.showAlert(
+        isEdit ? `Значення "${data.item.name}" успішно збережено` : `Значення "${data.item.name}" успішно створено`,
+        'success'
+      );
+
+      this.close();
+
+      await itemsJs.getData();
+    } catch (error) {
+      app.showAlert(error?.message || 'Не вдалося зберегти значення', 'error');
+    } finally {
+      this.loading = false;
+    }
+  },
+};

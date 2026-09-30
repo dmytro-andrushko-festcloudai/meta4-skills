@@ -1,0 +1,32 @@
+return {
+  selectedSort: '',
+
+  options: [
+    { value: 'name:asc', label: 'Сортувати по назві від А-Я' },
+    { value: 'name:desc', label: 'Сортувати по назві від Я-А' },
+    { value: 'manufacturer_name:asc', label: 'Сортувати по виробнику від А-Я' },
+    { value: 'manufacturer_name:desc', label: 'Сортувати по виробнику від Я-А' },
+    { value: 'country_of_origin:asc', label: 'Сортувати по країні від А-Я' },
+    { value: 'country_of_origin:desc', label: 'Сортувати по країні від Я-А' },
+  ],
+
+  getItems(selectedValue) {
+    return this.options.map((option) => ({ ...option, selected: selectedValue === option.value }));
+  },
+
+  getOrderBy() {
+    const [field, direction] = (MenuSorting.selectedValue || '').split(':');
+
+    return field ? [{ [field]: `${direction}_nulls_last` }] : [{ audit_updated_at: 'desc_nulls_last' }];
+  },
+
+  async onSort() {
+    if (MenuSorting.selectedValue === this.selectedSort) {
+      MenuSorting.setSelectedValue('');
+    }
+
+    this.selectedSort = MenuSorting.selectedValue;
+
+    await tableJs.getData();
+  },
+};

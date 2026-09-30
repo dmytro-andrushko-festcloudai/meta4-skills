@@ -28,7 +28,12 @@ Stack is the only container: `direction` (`row` / `column`), `gap`, `wrap`, `bgC
 | Photo / avatar | `Image` | `src`, `size`, `radius`, `fit`, `fallback` man / woman / no_photo |
 | Repeated rows or cards | `Repeater` | `data` binding, `currentItem` in the row scope, `showAddButton: false` for read-only |
 | Tabular data | `Table` | `columns` + `cell1..cell12` slots, `data`, built-in pagination props |
-| Menus, filters, inputs, selects | `Menu`, `Filter`, `Input`, `Select`, ... | copy them from `legal-entities` |
+| Sort / row-action menu | `Menu` | `trigger` slot holds the Button; `selectedValue` and `setSelectedValue` drive sort, see `nomenclatures-list` |
+| Multi-category filter | `Filter` + `CheckboxGroup` + `Input` | draft selection vs applied selection kept in `filterJs`, see `nomenclatures-list` |
+| Create/edit dialog, delete confirm | `Modal` | one script per modal; fields reset after close, see `dictionary-items` |
+| Page trail | `Breadcrumbs` | items come from a script, `onNavigate(id)` |
+| Hierarchy | `Tree` | see `taxonomy-merge` |
+| Form fields | `Input`, `Select`, `Checkbox`, `RadioGroup` | `valid` / `dirty` / `reset()` feed the submit state, see `nomenclatures-form` |
 
 Table pagination props: `enablePagination`, `serverSidePagination`, `pageSize`, `totalCount`, `onPageChange`, `onPageSizeChange`. **Repeater has no pagination and there is no standalone pagination block.** If a design needs pagination on a card list, that is a gap to report, not something to fake.
 
@@ -40,7 +45,7 @@ Figma's variable names do not always equal ui-v2's semantic names (`text/lable` 
 
 Typography: Figma `body/body 4 - SB` is variant `body4-sb`; `heading/H2 - M` (24px) is `heading2-m`; `heading/H4 - M` (18px) is `heading4-m`; `overline/overline 3 - SB` is `overline3-sb` (uppercase already). The full list is `TYPOGRAPHY` in `shared/ui-v2/src/lib/theme/components/mui-typography/mui-typography.ts`.
 
-Icons: Figma icon frames are Phosphor icons. Identify them by comparing the path with `node_modules/@phosphor-icons/react/dist/defs/<Name>.es.js` (scale 256 -> 20 by 12.8). Vacation luggage is `SuitcaseRolling`, first aid is `FirstAid`. Only names in `shared/ui-v2/src/lib/icon/icon-registry.ts` work.
+Icons: Figma icon frames are Phosphor icons. Identify them by comparing the path with `node_modules/@phosphor-icons/react/dist/defs/<Name>.es.js` (scale 256 -> 20 by 12.8). Sort is `SortAscending`-style, edit is `PencilSimple`. Only names in `shared/ui-v2/src/lib/icon/icon-registry.ts` work.
 
 ## Gotchas found while translating a real design
 
