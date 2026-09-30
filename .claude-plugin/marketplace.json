@@ -1,0 +1,11 @@
+{
+  "name": "meta4-skills",
+  "owner": { "name": "Dmytro Andrushko" },
+  "plugins": [
+    {
+      "name": "lowcode",
+      "source": "./plugins/lowcode",
+      "description": "Skills for building meta4 lowcode pages"
+    }
+  ]
+}

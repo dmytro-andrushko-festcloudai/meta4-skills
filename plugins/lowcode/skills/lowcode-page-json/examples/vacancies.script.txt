@@ -1,0 +1,70 @@
+const RING_RADIUS = 45;
+const RING_STROKE = 10;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+
+const days = (count) => {
+  const last = count % 10;
+  const lastTwo = count % 100;
+
+  if (last === 1 && lastTwo !== 11) return `${count} день`;
+
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return `${count} дні`;
+
+  return `${count} днів`;
+};
+
+const ring = ({ used, remaining, track, arc }) => {
+  const total = used + remaining;
+  const arcLength = used && total ? Math.max((used / total) * RING_LENGTH - RING_STROKE, 0) : 0;
+  const arcCircle = used
+    ? `<circle cx='50' cy='50' r='${RING_RADIUS}' fill='none' stroke='${arc}' stroke-width='${RING_STROKE}' stroke-linecap='round' stroke-dasharray='${arcLength} ${RING_LENGTH}' transform='rotate(-90 50 50)'/>`
+    : '';
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='${RING_RADIUS}' fill='none' stroke='${track}' stroke-width='${RING_STROKE}'/>${arcCircle}</svg>`;
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
+
+const balance = ({ title, used, remaining, track, arc }) => ({
+  title,
+  remaining,
+  ring: ring({ used, remaining, track, arc }),
+  usedText: days(used),
+  remainingText: days(remaining),
+});
+
+const request = ({ id, kind }) => {
+  const isSick = kind === 'sick';
+
+  return {
+    id,
+    title: isSick ? 'Лікарняний' : 'Відпустка',
+    subtype: isSick ? '' : 'За власний рахунок',
+    icon: isSick ? 'FirstAid' : 'SuitcaseRolling',
+    iconColor: isSick ? 'error' : 'primary',
+    tileBg: isSick ? 'var(--color-error-light_default)' : 'var(--color-primary-light_hover)',
+    tileBorder: isSick ? 'var(--color-error-light_focus)' : 'var(--color-primary-light_default)',
+    start: '11.02.2026',
+    end: '11.02.2027',
+    hr: 'Катерина Міцевська',
+    manager: 'Михайло Коваль',
+  };
+};
+
+return {
+  balances: {
+    vacation: balance({ title: 'Відпустка', used: 4, remaining: 20, track: '#E1F0FE', arc: '#3393FA' }),
+    sick: balance({ title: 'Лікарняні', used: 1, remaining: 4, track: '#FEE4E2', arc: '#F04438' }),
+  },
+  upcomingLeaves: [
+    { id: 1, name: 'Світлана Яцюк', dates: '20.03.2026 - 26.03.2026', fallback: 'woman' },
+    { id: 2, name: 'Віталій Булатецький', dates: '10.12.2026', fallback: 'man' },
+  ],
+  holidays: [
+    { id: 1, day: '8', month: 'Бер', title: 'Міжнародний жіночий день', weekday: 'Неділя' },
+    { id: 2, day: '12', month: 'Кві', title: 'Великдень', weekday: 'Неділя' },
+  ],
+  requests: [
+    ...[1, 2, 3, 4, 5, 6].map((id) => request({ id, kind: 'vacation' })),
+    ...[7, 8].map((id) => request({ id, kind: 'sick' })),
+  ],
+};
