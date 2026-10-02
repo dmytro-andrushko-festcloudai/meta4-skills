@@ -8,7 +8,7 @@ Contents: how layout works, blocks worth knowing, mapping Figma values to tokens
 node .claude/skills/lowcode-page-json/scripts/tool.mjs props <Block>
 ```
 
-prints the props and defaults, the slot keys and the methods, straight from the declaration. Block folders are in `apps/lowcode/src/blocks/`: badge, breadcrumbs, button, checkbox, checkbox-group, date-picker, divider, drag-and-drop, dropzone, filter, icon, icon-picker, image, input, list, menu, modal, phone-input, popover, radio-group, repeater, select, stack, switch, switcher, table, tabs, tag, text, tree. Only the blocks below were read in detail when this skill was written; use `props` for the rest.
+prints the props and defaults, the slot keys and the methods, straight from the declaration. Block folders are in `apps/lowcode/src/blocks/`: badge, breadcrumbs, button, checkbox, checkbox-group, date-picker, divider, drag-and-drop, drawer, dropzone, filter, icon, icon-picker, image, input, list, menu, modal, phone-input, popover, radio-group, repeater, select, stack, switch, switcher, table, tabs, tag, text, tree. Only the blocks below were read in detail when this skill was written; use `props` for the rest.
 
 ## Layout model (every block has these props)
 
@@ -30,12 +30,15 @@ Stack is the only container: `direction` (`row` / `column`), `gap`, `wrap`, `bgC
 | Tabular data | `Table` | `columns` + `cell1..cell12` slots, `data`, built-in pagination props |
 | Sort / row-action menu | `Menu` | `trigger` slot holds the Button; `selectedValue` and `setSelectedValue` drive sort, see `nomenclatures-list` |
 | Multi-category filter | `Filter` + `CheckboxGroup` + `Input` | draft selection vs applied selection kept in `filterJs`, see `nomenclatures-list` |
-| Create/edit dialog, delete confirm | `Modal` | one script per modal; fields reset after close, see `dictionary-items` |
+| Paginated card list | `List` | like Repeater plus the Table pagination props; no `gap` prop, so space rows with `customCss: 'gap: 4px;'` |
+| Create/edit dialog, delete confirm | `Modal` | one script per modal; fields reset after close, see `dictionary-items`. Children are a flat list spaced by `margin`, as in `ModalDictionary`: subtitle `4px 0 0`, first field `24px 0 0`, every next field (or row Stack of fields) `16px 0 0`, actions Stack `24px 0 0` with `gap: 12px` |
+| Tabs over a list | `Tabs` | `tabs: [{ id, label, value, content: [] }]`, `defaultValue`, `onChange`; `showToolbar` + `toolbar` slot for the icons on the right. Only the active tab's `content` renders and an empty content is still 250px tall, so each tab holds its own List (unique names) and one query filters on `Tabs.value`. Give the first block in each tab `margin: '12px 0 0'` for the gap under the tab strip, as in taxonomies (`TabsView`) |
+| Details side panel | `Drawer` | `anchor: 'right'`, `width`, `setOpen()`; a script keeps the opened item (`detailsJs.item`) and the drawer binds to it. Start it with the header divider below. Live example: `taxonomies/schemas/list.json` (`DrawerDetails`) |
 | Page trail | `Breadcrumbs` | items come from a script, `onNavigate(id)` |
 | Hierarchy | `Tree` | see `taxonomy-merge` |
 | Form fields | `Input`, `Select`, `Checkbox`, `RadioGroup` | `valid` / `dirty` / `reset()` feed the submit state, see `nomenclatures-form` |
 
-Table pagination props: `enablePagination`, `serverSidePagination`, `pageSize`, `totalCount`, `onPageChange`, `onPageSizeChange`. **Repeater has no pagination and there is no standalone pagination block.** If a design needs pagination on a card list, that is a gap to report, not something to fake.
+Pagination props on `Table` and `List`: `enablePagination`, `serverSidePagination`, `pageSize`, `totalCount`, `onPageChange`, `onPageSizeChange`. **Repeater has no pagination**: use `List` for a paginated card list. To hide pagination when everything fits on one page, bind `enablePagination` to `total > <smallest page size>` (15); comparing against the selected `pageSize` hides the size picker after the user picks a larger size, and they cannot switch back.
 
 ## Figma values to ui-v2 tokens
 
@@ -57,4 +60,8 @@ Icons: Figma icon frames are Phosphor icons. Identify them by comparing the path
 6. **Conditional rows:** `visible: "{{ !!currentItem.subtype }}"` hides a row per item.
 7. **Plurals and formatting** that the design shows ("1 день", "4 дні", "20 днів") belong in the data script, not in the block.
 8. **Design mock data is not data.** The same name repeated on every row is a placeholder; still use it as the mock, but say it is mock.
-9. **Responsive widths:** the design's fixed columns (for example 304px, 240px, 300px) are `widthMode: 'fixed'` Stacks. Check the render at the design's content width, not the frame width: the frame includes the 200px sidebar and page margins.
+9. **Drawer header sits under the close button.** The Drawer draws its own close button in the top corner, so a title placed first overlaps it or sits too close to the content. Make the first child a full-width `Divider` (`orientation: 'horizontal'`, `borderWidth: '1px'`, `padding: '38px 0 24px'`, `margin: '0 -24px 0'`); the negative margin runs the line past the drawer's 24px padding. Put no top margin on the header after it. Same as `DrawerDetails` in taxonomies.
+10. **Tab content sits flush under the tab strip.** The Tabs block adds no space between the strip and the content; put `margin: '12px 0 0'` on the first block of every tab (taxonomies does this on each Repeater/Table).
+11. **Two blocks must not bind to each other's values.** A binding that reads `Other.value` subscribes to Other's whole merged state, including Other's own bound props. So `DatePickerStart.maxDate = {{ DatePickerEnd.value }}` together with `DatePickerEnd.minDate = {{ DatePickerStart.value }}` throws `Cycle detected` and the prop resolves empty. Keep the shared values on a script instead: each block's `onChange` writes them (`modalJs.onStartChange(value);` sets `this.startDate`), and the props read the script (`{{ modalJs.endDate }}`). Reset those script fields wherever the form resets.
+12. **Clickable card:** put the action on the card Stack's `onClick` (`detailsJs.open(currentItem);`) and add `customCss: 'cursor: pointer;'`; `currentItem` is in scope there.
+13. **Responsive widths:** the design's fixed columns (for example 304px, 240px, 300px) are `widthMode: 'fixed'` Stacks. Check the render at the design's content width, not the frame width: the frame includes the 200px sidebar and page margins.

@@ -31,7 +31,9 @@ const visit = (n: PageNode, path: string) => {
 
   const info = shapeInfo(shape);
   const known = new Set(Object.keys(info.defaults));
-  const slots = new Set(slotsOf(shape));
+  const slotInfos = slotsOf(shape);
+  // A slot inside an array field (Tabs `tabs[].content`) is keyed by its container.
+  const slots = new Set(slotInfos.map((slot) => slot.container ?? slot.key));
   const where = `${path}/${n.type}(${n.props.name})`;
 
   if (referenced.has(String(n.props.name))) problems.push(`${where}: duplicate name "${n.props.name}"`);
@@ -50,17 +52,21 @@ const visit = (n: PageNode, path: string) => {
     if (typeof value === 'string') checkBinding(value, `${where}.${key}`);
   }
 
-  for (const key of slots) {
-    const value = n.props[key];
+  for (const { container, key } of slotInfos) {
+    const values = container
+      ? (Array.isArray(n.props[container]) ? (n.props[container] as Record<string, unknown>[]) : []).map((item) => item?.[key])
+      : [n.props[key]];
 
-    if (value === undefined) continue;
+    for (const value of values) {
+      if (value === undefined) continue;
 
-    if (!Array.isArray(value)) {
-      problems.push(`${where}: slot "${key}" is not an array`);
-      continue;
+      if (!Array.isArray(value)) {
+        problems.push(`${where}: slot "${container ? `${container}[].` : ''}${key}" is not an array`);
+        continue;
+      }
+
+      value.forEach((child) => visit(child, `${where}.${key}`));
     }
-
-    value.forEach((child) => visit(child, `${where}.${key}`));
   }
 
   for (const [key, value] of Object.entries(n.props)) {

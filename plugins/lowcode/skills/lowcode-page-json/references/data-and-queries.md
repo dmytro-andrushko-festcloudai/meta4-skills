@@ -66,6 +66,8 @@ When the API is not ready, put the data in a script and bind to it exactly as if
 
 ## Hasura notes
 
+- **Reading live Hasura yourself:** ask first, every time, with one line on what you want to read and why. Only `query` operations (including `__type` / `__schema` introspection) are allowed; mutations are never sent by the agent, not even against an id that does not exist. When the page needs a mutation checked, write it out for the user to run. Reads are worth asking for: introspection is how you confirm a field or column type before the page ships (`resolved_at` turned out to be `timestamp`, not `timestamptz`, and `people_organizations_v0` has no `name`; the workgroup name is `people_workgroups_v1.name`).
+- **Request headers** used in development: `x-hasura-admin-secret`, `x-hasura-tenant-id: 1` and `x-hasura-allowed-principal_fcp_id: {<principal fcp_id>}`. Audited tables refuse writes without the principal header (`audit_created_by` cannot be filled) and refuse a `tenant_id` in the payload: it must come from the session header.
 - Alias root fields (`things: schema_things_v1`) so `data.things` is stable regardless of the table name.
 - Use `<root>_aggregate { aggregate { count } }` for totals.
 - Table names carry a schema prefix and a version (`businessmngt_legal_entities_v1`, `meta4dev_widgets_v0`) and versions change. Take names from a query the user has run against the target environment.
