@@ -211,7 +211,7 @@ export default page({
 & tbody tr:hover button {
   opacity: 1;
 }`,
-      enablePagination: true,
+      enablePagination: '{{ (getNomenclatures.data?.total?.aggregate?.count || 0) > 15 }}',
       onPageChange: `{{
   getNomenclatures.run()
 }}`,

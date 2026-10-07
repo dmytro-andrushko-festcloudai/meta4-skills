@@ -44,7 +44,7 @@ Each folder in `examples/` is a builder `page.ts` plus its `scripts/*.txt`, take
 | `taxonomy-merge` | two `Tree` blocks with selection, a `Repeater` preview of the pending change, a merge mutation |
 | `permissions` | permission query and blocks gated with `visible` |
 
-The taxonomy list and dictionary list pages also use `Drawer` and `SearchInput`, which exist only on branches that have not reached the current block registry. Check `tool.mjs props Drawer` before planning a design around them.
+The taxonomy list, dictionary list and security-service roles pages also use `Drawer` and `SearchInput`. Both are in the block registry (`blocks/drawer`, `blocks/search-input`); still run `tool.mjs props Drawer` before planning around them, since their props have changed between branches.
 
 ## Rules (each one exists because the page breaks or silently misbehaves without it)
 
@@ -54,6 +54,9 @@ The taxonomy list and dictionary list pages also use `Drawer` and `SearchInput`,
 - **Scripts get no comments** and other code only where the reason is not visible from the code. This user removes comments from lowcode scripts on sight.
 - **Page text is inline Ukrainian**, as in the existing pages. Lowcode pages do not use i18n.
 - **Live Hasura: ask before every request, and only read.** Before each request you send to Hasura yourself (curl, introspection, checking a page query against real data), ask the user for permission with one short line saying what you want to read and why, e.g. "Read the `assignment_request_statuses` dictionary items to see which statuses the backend allows". Send only queries. Never send a mutation (insert, update, delete), even as a dry run: write it out for the user to run. See `references/data-and-queries.md`, "Hasura notes".
+- **No pagination bar for a single page.** Every paginated Table/List binds `enablePagination` to "more than 15 rows" (gotcha 16 in `references/blocks-and-layout.md`); a constant `true` shows a pager with one page.
+- **Check every mutation's result, not only its error.** `.run()` resolves to `{ data, error }` (never `errors`, never rejects). Hasura returns `affected_rows: 0` or a `null` by-pk row without any error when nothing changed, so after `if (result?.error)` also require `affected_rows > 0` or a non-null returned `fcp_id`, and show an alert otherwise. See `references/data-and-queries.md`, "Checking a query or mutation result".
+- **No admin secret in page JSON.** Query headers use `Bearer ${app.token}` only; page JSON is readable by every user (see gotcha 19 in `references/blocks-and-layout.md`).
 - **Never run git commands** (add, mv, rm, revert, anything) without approval, and never undo or unstage the user's work. Edit forward. Remove only files you created in this session.
 - **Don't invent behaviour the design does not show.** Render controls that exist in the design but wire nothing (buttons, menus, tooltips), and list them in the report.
 - **Typecheck with a temp tsconfig.** `tsc -p apps/lowcode/tsconfig.app.json` fails on `ignoreDeprecations` before reading any source. Write `apps/lowcode/tsconfig.check.json` extending `./tsconfig.app.json` with `"ignoreDeprecations": "5.0"`, run `tsc --noEmit -p` on it, then delete it. `npx eslint <paths>` works as is.

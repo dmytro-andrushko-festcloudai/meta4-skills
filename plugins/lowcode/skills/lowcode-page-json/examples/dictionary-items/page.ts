@@ -398,7 +398,7 @@ white-space: nowrap;`,
 }}`,
       enableSorting: false,
       itemKey: 'fcp_id',
-      enablePagination: true,
+      enablePagination: '{{ (getDictionaryItems.data?.total?.aggregate?.count || 0) > 15 }}',
       onPageChange: `{{
   getDictionaryItems.run()
 }}`,
