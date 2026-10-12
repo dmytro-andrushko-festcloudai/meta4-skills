@@ -74,7 +74,7 @@ Icons: Figma icon frames are Phosphor icons. Identify them by comparing the path
 
     Compare against 15, the smallest page-size option, not `Table1.pageSize`: once a user picks a larger size the bar would vanish and they could not switch back.
 17. **Check enum values against a real response before mapping them.** Hasura returned `status: "PUBLISHED"`, not the `publish` a design label suggested. Map case-insensitively in the script and send the real value in `_in` filters. Audit columns such as `audit_updated_by` can be `null`; render a dash, and do not build lookups from null ids.
-18. **A filter option list that would need its own query can be static.** The roles Author filter is the letters A-Z and А-Я; on Apply a script resolves them to ids (principals whose second name starts with a letter or contains the search text) and the list query filters `audit_updated_by _in ids`. An empty match must filter to nothing, not be treated as "no filter".
+18. **A filter option list that would need its own query can be static.** The roles Author filter is the letters A-Z and А-Я; on Apply a script resolves the ticked letters to ids (principals whose second name starts with one of them) and the list query filters `audit_updated_by _in ids`. An empty match must filter to nothing, not be treated as "no filter".
 19. **Never paste `x-hasura-admin-secret` into page JSON.** Page JSON ships to every browser. Headers are `Authorization: Bearer ${app.token}` only; if a table is not readable, fix the Hasura permission.
 20. **`Tabs` used as a tab strip only (no panel content) needs `heightMode: 'fixed'` and `height: '33'`.** Left on `hug` it reserves a tall empty panel and pushes everything in the same row apart. Drive the table from `onChange` and `TabsScope.value`.
 21. **Per-row checkboxes that depend on each other:** keep the rows in a script (`permsJs.rows`), bind each `Checkbox` `defaultValue` to `currentItem.<level>`, and in `onChange` call a script method that returns a **new** array (`this.rows = this.rows.map(...)`). Mutating a row in place does not refresh the table. Do not name a row field `parent` (blocked identifier): use `owner`.
@@ -86,3 +86,39 @@ Icons: Figma icon frames are Phosphor icons. Identify them by comparing the path
 24. **One drawer opens another: close the first, then open the second.** Two open drawers stack their backdrops. Keep what the second one needs before closing: `const role = this.role; DrawerRole.setOpen(false); accessJs.open(role);`.
 25. **Levels that include each other (View < Edit < Admin) must cascade on read-only screens too,** not only in the editing form. The API stores only the highest level, so a details drawer that sets just `row[action] = true` shows Admin without Edit and View. Set every level up to the stored one: `LEVELS.slice(0, LEVELS.indexOf(action) + 1).forEach((level) => (row[level] = true))`.
 26. **Gate actions on the record's status in every place they appear.** "Assign to employee" is valid only for published roles: hide the drawer button with `visible: "{{ tableJs.isActive(drawerJs.role?.status) }}"`, drop it from the row menu in the same script that builds the menu items, and return early in the script method that opens the flow.
+27. **A `Filter` category's search `Input` only narrows its option list; never put its text in the filter's draft state.** If `isSame()`/`isChanged()` reads the search text, the first letter typed flips `disableApply`/`disableClear`. The Filter re-renders, the category panel is rebuilt, and the input loses focus after one character. Keep draft, `EMPTY`, `isSame()`, `selectedQty()` and `restore()` to the ticked values (`CheckboxGroupX.values`, `RadioGroupX.value`, dates). Apply filters by those values only, not by the typed text. Clear a search box only in `onClearCategory`/`resetSearch`. Same as `filterJs` in `security-service/schemas/access.json` and `security-roles.json`.
+28. **Reset the search boxes when the user switches category.** Bind the Filter's `onCategoryChange` to `{{ filterJs.resetSearch() }}`, which sets every category's search `Input` to `''`. Leave the ticked values alone, so switching tabs does not drop a selection.
+29. **A read-only table must not react to hover or clicks.** The Table block always passes row click handlers, so every row gets the hover background and a pointer cursor, and a click leaves it `Mui-selected` (light blue). For preview tables (permissions or users in a details drawer) add to the table's `customCss`:
+    ```css
+    & tbody tr.MuiTableRow-hover:hover,
+    & tbody tr.Mui-selected,
+    & tbody tr.Mui-selected:hover {
+      background-color: transparent;
+      cursor: default;
+    }
+    ```
+    Keep hover on tables whose rows open something or carry checkboxes.
+30. **Highlight rows by what they hold, with `:has()` in the table's `customCss`.** Selected rows in a picker: `& tbody tr:has(.Mui-checked) > td { background-color: #F5FAFF; }`. Group rows (a data component above its entities): give the name `Text` a distinct variant (`variant: "{{ currentItem.component ? 'body4-m' : 'body4-r' }}"`, colour `#252B37` / `#555D6D`) and match it: `& tbody tr:has(> td:first-of-type .MuiTypography-body4-m) > td { background-color: #EEF4FF; }`. Colour the `td`, not the `tr`, so it survives gotcha 29. The row builder must set the flag (`component: true`) on group rows.
+31. **Empty state ("Тут поки порожньо"), e.g. a "Selected" tab with nothing selected.** A centred column Stack after the table, `gap: '24px'`, holding an `Image` (`src: 'assets/images/island-with-pc-x2.webp'`, `size: '284'`, `fit: 'contain'`, `customCss: '& img {\n  height: 240px;\n}'` because the Image block only takes a square size and the asset is 334:282) and a text Stack (`gap: '4px'`, centred): title `heading5-m` `#252B37`, hint `body4-r` `#858C99`. Show it with a script method (`isEmpty() { return this.tab === 'selected' && this.getCount() === 0; }`) and hide the table with its negation. Centring vertically:
+    - in a drawer whose content Stack scrolls (gotcha 23): `heightMode: 'fill'` on the empty Stack, and add `box-sizing: border-box;\n  min-height: 100%;` to the content Stack's `& > div` rule, otherwise the slot hugs its content and `fill` has nothing to grow into;
+    - on a page whose Stacks all hug: `customCss: 'min-height: calc(100vh - <space above>px);'` with `verticalAlign: 'center'`.
+    The shell serves `shared/assets/src/lib/images` at `assets/images/`, so the image loads inside the shell, not on the standalone lowcode dev server.
+32. **Search next to tabs is a `SearchInput`, not an `Input`, and it must push the tabs aside, not overlay them.** Put it in the same row Stack as the `Tabs` (`widthMode: 'fill'`), with `width: '32px'`, `widthMode: 'fixed'`, `height: '32px'`, `heightMode: 'fixed'` and this `customCss`, so the wrapper itself grows from 32px to 200px and the tab strip shrinks:
+    ```css
+    flex-shrink: 0;
+    transition: width 300ms ease;
+
+    & > div {
+      width: 100%;
+    }
+
+    &:focus-within,
+    &:has(input:not(:placeholder-shown)) {
+      width: 200px;
+    }
+    ```
+    Do not use the older `position: absolute` overlay (`& > div { position: absolute; right: 0; ... }`): the open box covers the end of the tab underline. Reference: `InputAccessSearch` and `InputDrawerSearch` in `security-service/schemas/access.json`. Scripts keep working: SearchInput has `.value`, `setValue()`, `clearValue()`.
+33. **A drawer footer always has at least one button.** When permissions or status hide every action, show `Закрити` (outlined, `lg`, `onClick: DrawerX.setOpen(false)`), visible on the negation of every other button's condition, and update that condition whenever a footer button is added.
+34. **Status info message (e.g. "Роль у статусі “Чернетка”"):** a row Stack under the drawer header, `bgColor: '#F5FAFF'`, `borderColor: '#88C3FF'`, `borderRadius: '8px'`, `padding: '12px 48px 12px 16px'`, `gap: '12px'`; an `Icon` `Info` with `color: 'primary'` and `margin: '2px 0 0'`; a text Stack (`gap: '2px'`) with title `body3-m` `#1570EF` and text `body4-r` `#555D6D`. Visible only in that status. An action that changes the status from a drawer reuses the list's confirm flow (`tableJs.askActivate(drawerJs.role)`) and closes the drawer on success when it shows that record.
+35. **Disable the breadcrumbs forward arrow** (`forwardDisabled: true`) and bind `onBack` to the same navigation as the parent crumb; an empty `onBack` leaves a dead arrow.
+

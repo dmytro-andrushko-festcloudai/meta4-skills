@@ -31,26 +31,57 @@ REST: `kind: "rest"`, `url`, `method` (GET/POST/PUT/PATCH/DELETE), `headers`, `b
 A script is the body of a function that returns an object; methods on it are the page's handlers.
 
 ```js
-const basePath = constantsJs.basePath;
-
 return {
   async getData() {
     Table1.setPage(1);
     await getLegalEntities.run();
   },
   onEdit() {
-    app.navigate(`${basePath}/${Table1.selectedRow.fcp_id}/edit`);
+    app.navigate(`${Table1.selectedRow.fcp_id}/edit`);
   },
 };
 ```
 
-Conventions from `legal-entities`: `constantsJs` holds `GRAPHQL_URL` and `basePath` (`/${lng}/low-code/<route>`, `lng` from `app.URL`); one script per concern (table, filter, form, breadcrumbs, options); a data-shaping script turns the query response into the rows the blocks bind to (`getData()` returning `{ fcp_id, name, ... }[]`), so bindings stay one-liners.
+Conventions from `legal-entities`: `constantsJs` holds `GRAPHQL_URL` (navigation is relative, so there is no `basePath`: see "Navigation" below); one script per concern (table, filter, form, breadcrumbs, options); a data-shaping script turns the query response into the rows the blocks bind to (`getData()` returning `{ fcp_id, name, ... }[]`), so bindings stay one-liners.
+
+**Every endpoint and service URL lives in the page's constants script, and queries read only from there.** One place to point a page at a mock or another environment:
+
+```js
+return {
+  GRAPHQL_URL: app.env.GRAPHQL_URL,
+  SECURITY_SERVICE_URL: app.env.SECURITY_SERVICE_URL || 'https://internal.dev.api.festcloud.ai/security-service',
+};
+```
+
+GraphQL queries use `"endpoint": "{{ constants.GRAPHQL_URL }}"`; REST queries `"url": "{{ constants.SECURITY_SERVICE_URL }}/api/v1/roles?role={{ encodeURIComponent(params.role) }}"` (inside a template-literal URL: `${constants.SECURITY_SERVICE_URL}`). `app.env` exposes `GRAPHQL_URL`, `GRAPHQL_WS_URL` and `SECURITY_SERVICE_URL` (from `NX_PUBLIC_JWT_SERVICE_API_URL`); never hardcode a host in a query. Security-service REST: activate `POST /api/v1/roles?role=<name>`, delete a published role `DELETE /api/v1/roles?role=<name>` (not the `securityservice_deleteRole` Hasura action); a non-2xx response becomes `result.error`.
+
+**Editing a published (active) role never touches it directly** (old Appsmith flow, `roleJs` in `security-service/schemas/role-form.json`): look up a `DRAFT` role with the same name (`getRoleDraft`); if one exists, diff the selection against the draft's own permissions and update the draft; otherwise create a new `DRAFT` with that name and all selected permissions. Only Activate then calls the activate endpoint with the name, and the backend swaps the draft in. When the form opens on a published role that has a draft, load the draft's permissions.
 
 Blocked identifiers apply here too (see SKILL.md). Avoid naming a local `parent`, `top`, `self`.
 
 ## The `app` object
 
-Readable in bindings: `app.URL` (`.pathname`, `.query`, `.params`, `.base`), `app.mode` (`'editor'` or `'viewer'`), `app.token`, `app.user` (`.permissions`), `app.vars`, and `app.hasPermission(requirements)`. Only in scripts and actions: `app.copyToClipboard(text)` (async; was `app.copy`, so pages written earlier need the new name), `app.navigate(to, { replace, newTab })`, `app.setSearchParams(patch)`, `app.setVar(name, value)`, `app.showAlert(message, severity)`. Navigate with the full shell path, `/uk/low-code/<route>`.
+Readable in bindings: `app.URL` (`.pathname`, `.query`, `.params`, `.base`), `app.mode` (`'editor'` or `'viewer'`), `app.token`, `app.user` (`.permissions`), `app.vars`, and `app.hasPermission(requirements)`. Only in scripts and actions: `app.copyToClipboard(text)` (async; was `app.copy`, so pages written earlier need the new name), `app.navigate(to, { replace, newTab })`, `app.setSearchParams(patch)`, `app.setVar(name, value)`, `app.showAlert(message, severity)`. Navigate with relative paths (below); a full shell path only to leave the page's own area.
+
+## Navigation
+
+**Navigate relative to the current URL, never through a hardcoded base path.** A page does not know where it is mounted: the dev app serves it at `/uk/low-code/<route>`, the shell at `/uk/workspaces/<workspace>/<page>`. A `basePath` built from either breaks in the other (it also forced a `lng` lookup, and `app.URL` has no `lng`). Relative paths resolve the same everywhere.
+
+`app.navigate(to)` resolves a path without a leading `/` against the **URL**, like folders (React Router `relative: 'path'`, set in `use-viewer-host.ts`), not against the route tree. The route tree differs between hosts (the shell nests routes from Hasura slugs, the dev router lists them flat), so route-relative links would change meaning per host.
+
+| Page URL | Goes to | Write |
+|---|---|---|
+| `…/roles` | `…/roles/create` | `app.navigate('create')` |
+| `…/roles` | `…/roles/<id>/edit` | ``app.navigate(`${id}/edit`)`` |
+| `…/roles/create` | `…/roles` | `app.navigate('..')` |
+| `…/roles/<id>/edit` | `…/roles` | `app.navigate('../..')` (the page is two segments deep) |
+| `…/permissions` | `…/roles/<id>/edit` | ``app.navigate(`../roles/${id}/edit`)`` |
+
+Count the segments of the page's own URL: each `..` removes one. A form used for both create (`…/create`) and edit (`…/:id/edit`) needs both: ``app.navigate(constants.roleId ? '../..' : '..')``.
+
+The older pages mirrored in `examples/` (nomenclatures, dictionaries, taxonomies) still build links from `constantsJs.basePath`; use the relative form in new pages and do not copy the `basePath` constant.
+
+Keep absolute paths (`/uk/...`) only for a target outside the page's own area; other hosts mount it elsewhere. Relative links need no change to `router.tsx` beyond registering each route, and the shell builds the same URLs from the Hasura view slugs, so create the views with slugs that match the links (`:id/edit`, not `edit/:id`).
 
 ## Binding a list or table to a query
 

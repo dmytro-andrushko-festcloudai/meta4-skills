@@ -86,3 +86,7 @@ return {
 2. Test the script by evaluating it with a stubbed `app.hasPermission` that implements the waterfall (`view` < `edit` < `admin`, every requirement must hold) for: no grants, view only, edit of one component only, edit of all required components, and admin. Check that a delete needs `admin`, not `edit`, and that a row-dependent capability behaves for both kinds of row.
 3. With a real token, open the page in the shell as users with different levels; the render harness has no user permissions and shows gated blocks hidden.
 4. In the report list every requirement string and where it came from: a Hasura table rule, or an assumption for an action or REST endpoint.
+
+**Levels include each other in `app.hasPermission`:** `admin` satisfies `edit` and `view` on the same data component, `edit` satisfies `view`. So `['role_edit', 'permission_edit']` passes for a user with `role_admin` and `permission_admin`; do not add the admin names as alternatives.
+
+**If every gated control is hidden for a user who has the permissions,** the page is running without a user: `app.hasPermission` falls back to the engine's empty host. Pages rendered as shell workspace pages go through `LowCodePage` → `PageViewer`, which must pass and wrap `user` (`UserProvider`) the same way `LowCode.tsx` → `App` does. The console's `Unknown Event type: webpackOk` lines come from the React DevTools extension and are unrelated.

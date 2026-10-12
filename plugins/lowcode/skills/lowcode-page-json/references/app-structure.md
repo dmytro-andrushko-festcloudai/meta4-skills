@@ -30,7 +30,7 @@ Decide up front which actions each view exposes and where each one navigates, th
 
 ## Conventions every view follows
 
-- **Same `constantsJs`** in every view: `GRAPHQL_URL` and `basePath` (`/${lng}/low-code/<name>`, `lng` from `app.URL.params`). Navigation always goes through `basePath`.
+- **Same `constantsJs`** in every view: `GRAPHQL_URL` (and the other endpoints). There is no `basePath`: navigation is relative to the current URL (`'create'`, `` `${id}/edit` ``, `'..'`, `'../..'`), so it works under the dev router and under the shell's workspace routes alike. Table and rules: `references/data-and-queries.md`, "Navigation".
 - **Same block names across views** for the same role: `InputSearch`, `TableX`, `MenuSorting`, `FilterX`, `ModalX`. Scripts reach blocks by name, so semantic names are what make a script readable and copyable between views.
 - **`initJs`** reads `app.URL.params.id`, loads the record when present, and returns `{ id }`. In editor mode (`app.mode === 'editor'`) there is no route param, so fall back to a real id so the preview has data.
 - **List data** lives in a `tableJs` (`getData()` resets to page 1 then runs the query; `getVariables()` / `getWhere()` builds it), `sortingJs` (options + `getOrderBy()`), `filterJs` (applied vs draft selection). See `examples/nomenclatures-list`.
@@ -59,4 +59,4 @@ Register the routes by hand, then typecheck and lint (see SKILL.md). Rendering a
 2. Every query used by a view is declared in that view: queries are per JSON, not shared.
 3. `validate` passes, including the reference check for script, query and block names.
 4. `render` matches the design at the design's content width.
-5. Every route the views navigate to is in the router snippet.
+5. Every route the views navigate to is in the router snippet, and every relative link resolves to one of them from each view's own URL (a view at `/<name>/:id/edit` goes back with `'../..'`, not `'..'`).
