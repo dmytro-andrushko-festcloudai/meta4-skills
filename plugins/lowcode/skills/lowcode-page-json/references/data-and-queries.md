@@ -10,6 +10,8 @@ Contents: page structure, query nodes, scripts, the `app` object, common list an
 
 `scripts` are named objects other code reaches by name (`constantsJs`, `tableJs`, `formJs`). `queries` are named requests reached by name (`getLegalEntities.run()`, `getLegalEntities.data`). Blocks are reached by their `name` (`Table1.setPage(1)`, `Input1.value`), which the builder assigns as `Type1`, `Type2`, ... in creation order. `scripts/builder.ts` exports `page`, `script`, `graphqlQuery`, `node`, `stack`, `text`, `icon`, `button`.
 
+**Naming and folders (newer pages, `security-service/schemas/security-roles.json`):** name a script by its role without the `Js` suffix (`table`, `filter`, `drawer`, `access`, `permissions`, `i18n`, `translations`, `constants`, `init`); the older examples below still use the suffix. `root.props.folders` is a flat list `{ id, name }` shown in the code panel; give every script and query a `folderId` and group by domain, not by kind: `core` (init, constants, permissions), `localization` (i18n, translations), then one folder per feature area (`table`, `filter`, `drawer`, `access`) holding that area's scripts and the queries it calls. Folders do not nest. In the builder: `script(name, code, "table")` and `graphqlQuery(name, query, { folder: "table" })`; `page()` emits `root.props.folders` for the folders used. Names must not be reserved (`validateName`), so `filter`, `table` and similar are fine but `top`, `self`, `parent` are not.
+
 ## Query nodes
 
 GraphQL (what every existing page uses):
