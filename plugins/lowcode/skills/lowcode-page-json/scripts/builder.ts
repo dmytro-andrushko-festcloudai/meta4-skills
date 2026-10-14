@@ -65,6 +65,38 @@ export const icon = (name: string, props: Props = {}) => node('Icon', { icon: na
 
 export const button = (label: string, props: Props = {}) => node('Button', { text: label, ...props });
 
+/**
+ * A form Modal: the title and the actions stay fixed, only `body` scrolls. `body` and `footer` are the
+ * children of the two inner Stacks; the Modal draws its own close button, so there is no close Icon.
+ */
+export const formModal = (parts: {
+  body: Node[];
+  footer: Node[];
+  name?: string;
+  onClose?: string;
+  title: string;
+  width?: string;
+}) =>
+  node('Modal', {
+    ...(parts.name ? { name: parts.name } : {}),
+    children: [
+      stack({ direction: 'column', gap: '16px', widthMode: 'fill', customCss: 'max-height: calc(90vh - 48px); overflow: hidden;' }, [
+        text(parts.title, 'heading4-sb', 'text-title', { customCss: 'overflow-wrap: anywhere;', padding: '0 32px 0 0' }),
+        stack({ direction: 'column', gap: '16px', widthMode: 'fill', customCss: 'flex: 1 1 auto; min-height: 0; overflow-y: auto;' }, parts.body),
+        stack({ direction: 'row', gap: '12px', horizontalAlign: 'end', widthMode: 'fill' }, parts.footer),
+      ]),
+    ],
+    height: '',
+    maxHeight: '90vh',
+    onClose: parts.onClose ?? '',
+    padding: '24',
+    width: parts.width ?? '560',
+  });
+
+/** The content of one tab: a Stack with padding, so it never sits flush under the tab strip. */
+export const tabContent = (children: Node[], padding = '8px 0 0') =>
+  stack({ direction: 'column', gap: '16px', padding, widthMode: 'fill' }, children);
+
 export const hug: Props = { widthMode: 'hug' };
 
 export const fixed = (width: string, height?: string): Props => ({

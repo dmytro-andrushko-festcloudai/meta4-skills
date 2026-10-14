@@ -22,6 +22,94 @@ const checkBinding = (value: string, where: string) => {
   }
 };
 
+const FIELD_BLOCKS = new Set([
+  'Checkbox',
+  'CheckboxGroup',
+  'DatePicker',
+  'Dropzone',
+  'Input',
+  'MultiSelect',
+  'PhoneInput',
+  'RadioGroup',
+  'Select',
+  'Switch',
+]);
+const SCROLLS = /overflow-y:\s*auto/;
+
+const collectNodes = (value: unknown, out: PageNode[] = []): PageNode[] => {
+  if (isNode(value)) {
+    out.push(value);
+    collectNodes(value.props, out);
+  } else if (Array.isArray(value)) {
+    value.forEach((item) => collectNodes(item, out));
+  } else if (value && typeof value === 'object') {
+    Object.values(value).forEach((item) => collectNodes(item, out));
+  }
+
+  return out;
+};
+
+// The right padding in px of a CSS padding shorthand ('8px', '0 32px 0 0', ...); 0 when unset or not in px.
+const rightPadding = (padding: string): number => {
+  const parts = padding.trim().split(/\s+/).filter(Boolean);
+  const right = parts.length === 1 ? parts[0] : parts[1];
+
+  return Number.parseFloat(right ?? '') || 0;
+};
+
+// A Modal keeps its header and actions fixed and scrolls only the fields, gotcha 36 in blocks-and-layout.md.
+const checkModal = (n: PageNode, where: string) => {
+  const { height, maxHeight } = n.props;
+  const inner = collectNodes(n.props.children);
+  const scrollers = inner.filter((item) => item.type === 'Stack' && SCROLLS.test(String(item.props.customCss ?? '')));
+  const top = Array.isArray(n.props.children) ? (n.props.children as PageNode[])[0] : undefined;
+
+  if (height !== '' || !maxHeight) problems.push(`${where}: a Modal needs height '' and a maxHeight such as '90vh'`);
+
+  if (inner.filter((item) => FIELD_BLOCKS.has(item.type)).length >= 3 && scrollers.length === 0) {
+    problems.push(`${where}: a Modal with several fields must scroll them in an inner Stack (customCss "overflow-y: auto")`);
+  }
+
+  if (top && scrollers.includes(top)) {
+    problems.push(`${where}: the top Stack scrolls, so the header and the actions scroll too; scroll only an inner Stack`);
+  }
+
+  const title = top ? collectNodes(top).find((item) => item.type === 'Text') : undefined;
+
+  if (title && rightPadding(String(title.props.padding ?? '')) < 32) {
+    problems.push(`${where}: the title "${title.props.name}" needs padding: '0 32px 0 0' so it wraps before the close button`);
+  }
+
+  const unbreakable = inner.find(
+    (item) => item.type === 'Text' && String(item.props.text ?? '').includes('{{') && !/overflow-wrap/.test(String(item.props.customCss ?? ''))
+  );
+
+  if (unbreakable) {
+    problems.push(`${where}: the bound text "${unbreakable.props.name}" needs customCss "overflow-wrap: anywhere;" so a long name without spaces wraps`);
+  }
+
+  if (inner.some((item) => item.type === 'Icon' && item.props.icon === 'X' && /close/i.test(String(item.props.onClick ?? '')))) {
+    problems.push(`${where}: the Modal draws its own close button, remove the extra close Icon`);
+  }
+};
+
+// Every tab's content is one Stack with padding, so it never sits flush under the tab strip (gotcha 10).
+const checkTabs = (n: PageNode, where: string) => {
+  const tabs = Array.isArray(n.props.tabs) ? (n.props.tabs as Array<{ content?: PageNode[]; label?: string }>) : [];
+
+  tabs.forEach((tab) => {
+    const content = Array.isArray(tab.content) ? tab.content : [];
+
+    if (content.length === 0) return;
+
+    const [first] = content;
+
+    if (content.length !== 1 || first.type !== 'Stack' || !String(first.props.padding ?? '').trim()) {
+      problems.push(`${where}: tab "${tab.label}" content must be one Stack with padding (for example '8px 0 0')`);
+    }
+  });
+};
+
 const visit = (n: PageNode, path: string) => {
   nodes += 1;
 
@@ -39,6 +127,10 @@ const visit = (n: PageNode, path: string) => {
   if (referenced.has(String(n.props.name))) problems.push(`${where}: duplicate name "${n.props.name}"`);
 
   referenced.add(String(n.props.name));
+
+  if (n.type === 'Modal') checkModal(n, where);
+
+  if (n.type === 'Tabs') checkTabs(n, where);
 
   for (const key of Object.keys(n.props)) {
     if (key !== 'id' && key !== 'name' && !known.has(key) && !slots.has(key)) problems.push(`${where}: unknown prop "${key}"`);

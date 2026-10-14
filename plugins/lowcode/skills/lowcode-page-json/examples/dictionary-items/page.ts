@@ -1,4 +1,4 @@
-import { graphqlQuery, node, page, script } from '../../scripts/builder';
+import { graphqlQuery, node, page, script, stack } from '../../scripts/builder';
 import constantsCode from './scripts/constants.txt';
 import initCode from './scripts/init.txt';
 import dictionaryCode from './scripts/dictionary.txt';
@@ -413,8 +413,11 @@ white-space: nowrap;`,
     node('Modal', {
       name: 'ModalItem',
       children: [
+        stack({ direction: 'column', widthMode: 'fill', customCss: 'max-height: calc(90vh - 48px); overflow: hidden;' }, [
         node('Text', {
           name: 'TextItemTitle',
+          padding: '0 32px 0 0',
+          customCss: 'overflow-wrap: anywhere;',
           color: '#161A22',
           text: `{{
   itemModal.currentItem ? \`Редагувати "\${itemModal.currentItem.name || ''}"\` : 'Створення значення'
@@ -431,6 +434,7 @@ white-space: nowrap;`,
   !itemModal.currentItem
 }}`,
         }),
+        stack({ direction: 'column', widthMode: 'fill', customCss: 'flex: 1 1 auto; min-height: 0; overflow-y: auto;' }, [
         node('Input', {
           name: 'InputItemName',
           margin: '24px 0 0 ',
@@ -490,6 +494,7 @@ white-space: nowrap;`,
           placeholder: 'Enter a description...',
           type: 'textarea',
         }),
+        ]),
         node('Stack', {
           name: 'StackItemActions',
           children: [
@@ -521,14 +526,18 @@ white-space: nowrap;`,
           direction: 'row',
           gap: '12px',
         }),
+        ]),
       ],
       height: '',
+      maxHeight: '90vh',
     }),
     node('Modal', {
       name: 'ModalDeleteItem',
       children: [
         node('Text', {
           name: 'TextDeleteItemTitle',
+          padding: '0 32px 0 0',
+          customCss: 'overflow-wrap: anywhere;',
           color: '#161A22',
           text: `{{
   \`Видалити значення "\${deleteItem.getLabel()}"?\`
@@ -537,6 +546,7 @@ white-space: nowrap;`,
         }),
         node('Text', {
           name: 'TextDeleteItemDescription',
+          customCss: 'overflow-wrap: anywhere;',
           margin: '8px 0 0',
           color: '#858C99',
           text: `{{
@@ -576,18 +586,23 @@ white-space: nowrap;`,
         }),
       ],
       height: '',
+      maxHeight: '90vh',
     }),
     node('Modal', {
       name: 'ModalEditDictionary',
       children: [
+        stack({ direction: 'column', widthMode: 'fill', customCss: 'max-height: calc(90vh - 48px); overflow: hidden;' }, [
         node('Text', {
           name: 'TextEditDictTitle',
+          padding: '0 32px 0 0',
+          customCss: 'overflow-wrap: anywhere;',
           color: '#161A22',
           text: `{{
   \`Редагувати "\${dictionary.getDictionary()?.name || ''}"\`
 }}`,
           variant: 'heading4-sb',
         }),
+        stack({ direction: 'column', widthMode: 'fill', customCss: 'flex: 1 1 auto; min-height: 0; overflow-y: auto;' }, [
         node('Input', {
           name: 'InputEditDictName',
           margin: '24px 0 0 ',
@@ -647,6 +662,7 @@ white-space: nowrap;`,
           placeholder: '',
           type: 'textarea',
         }),
+        ]),
         node('Stack', {
           name: 'StackEditDictActions',
           children: [
@@ -676,14 +692,18 @@ white-space: nowrap;`,
           direction: 'row',
           gap: '12px',
         }),
+        ]),
       ],
       height: '',
+      maxHeight: '90vh',
     }),
     node('Modal', {
       name: 'ModalDeleteDictionary',
       children: [
         node('Text', {
           name: 'TextDeleteDictTitle',
+          padding: '0 32px 0 0',
+          customCss: 'overflow-wrap: anywhere;',
           color: '#161A22',
           text: `{{
   \`Видалити словник "\${dictionary.getDictionary()?.name || ''}"?\`
@@ -692,6 +712,7 @@ white-space: nowrap;`,
         }),
         node('Text', {
           name: 'TextDeleteDictDescription',
+          customCss: 'overflow-wrap: anywhere;',
           margin: '8px 0 0',
           color: '#858C99',
           text: `{{
@@ -731,6 +752,7 @@ white-space: nowrap;`,
         }),
       ],
       height: '',
+      maxHeight: '90vh',
     }),
   ],
   queries: [
