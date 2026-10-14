@@ -8,11 +8,11 @@ return {
   },
 
   goToList() {
-    app.navigate(constantsJs.basePath);
+    app.navigate(constants.basePath);
   },
 
   async reload() {
-    const { error } = await getDictionary.run({ id: initJs.id });
+    const { error } = await getDictionary.run({ id: init.id });
 
     if (error) app.showAlert(error, 'error');
   },

@@ -36,7 +36,7 @@ return {
     const fields = this.getFields();
     const isInvalid = fields.some((field) => !field?.valid);
 
-    if (!initJs.id) return isInvalid;
+    if (!init.id) return isInvalid;
 
     return isInvalid || !fields.some((field) => Boolean(field?.dirty));
   },
@@ -71,8 +71,8 @@ return {
 
     try {
       const object = this.getObject();
-      const { data, error } = initJs.id
-        ? await updateNomenclature.run({ id: initJs.id, object })
+      const { data, error } = init.id
+        ? await updateNomenclature.run({ id: init.id, object })
         : await createNomenclature.run({ object });
 
       if (error) throw new Error(error);
@@ -80,11 +80,11 @@ return {
       const id = data?.nomenclature?.fcp_id;
 
       if (!id) {
-        throw new Error(initJs.id ? 'Не вдалося оновити товар' : 'Не вдалося створити товар');
+        throw new Error(init.id ? 'Не вдалося оновити товар' : 'Не вдалося створити товар');
       }
 
-      app.showAlert(initJs.id ? 'Товар успішно оновлено' : 'Товар успішно створено', 'success');
-      app.navigate(initJs.id ? `${constantsJs.basePath}/${id}` : `${constantsJs.basePath}/${id}?from=create`);
+      app.showAlert(init.id ? 'Товар успішно оновлено' : 'Товар успішно створено', 'success');
+      app.navigate(init.id ? `${constants.basePath}/${id}` : `${constants.basePath}/${id}?from=create`);
     } catch (error) {
       app.showAlert(error?.message || 'Не вдалося зберегти товар', 'error');
     } finally {

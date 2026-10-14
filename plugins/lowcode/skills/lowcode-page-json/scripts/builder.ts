@@ -82,7 +82,7 @@ export const graphqlQuery = (
   ...(options.folder ? { folderId: folderId(options.folder) } : {}),
   kind: 'graphql',
   name,
-  endpoint: '{{ constantsJs.GRAPHQL_URL }}',
+  endpoint: '{{ constants.GRAPHQL_URL }}',
   operation: query.trimStart().startsWith('mutation') ? 'mutation' : 'query',
   query,
   variables: options.variables ?? '{}',

@@ -23,6 +23,6 @@ return {
 
     this.selectedSort = MenuSorting.selectedValue;
 
-    await itemsJs.getData();
+    await items.getData();
   },
 };

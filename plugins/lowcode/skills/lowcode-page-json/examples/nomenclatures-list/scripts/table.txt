@@ -7,7 +7,7 @@ return {
 
   getVariables() {
     const search = InputSearch.value?.trim();
-    const { names, manufacturers, countries } = filterJs.selectedFilters;
+    const { names, manufacturers, countries } = filter.selectedFilters;
     const pageSize = TableNomenclatures.pageSize || 15;
     const filters = [];
 
@@ -30,7 +30,7 @@ return {
     return {
       offset: ((TableNomenclatures.page || 1) - 1) * pageSize,
       limit: pageSize,
-      order_by: sortingJs.getOrderBy(),
+      order_by: sorting.getOrderBy(),
       where: { _and: filters },
     };
   },
@@ -43,15 +43,15 @@ return {
 
   onMenuClick(value, item) {
     if (value === 'edit') {
-      app.navigate(`${constantsJs.basePath}/${item.fcp_id}/edit`);
+      app.navigate(`${constants.basePath}/${item.fcp_id}/edit`);
     }
   },
 
   onCreate() {
-    app.navigate(`${constantsJs.basePath}/create`);
+    app.navigate(`${constants.basePath}/create`);
   },
 
   onPreview(item) {
-    app.navigate(`${constantsJs.basePath}/${item.fcp_id}`);
+    app.navigate(`${constants.basePath}/${item.fcp_id}`);
   },
 };

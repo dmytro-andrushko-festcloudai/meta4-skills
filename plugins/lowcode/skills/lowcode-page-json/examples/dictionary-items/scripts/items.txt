@@ -7,7 +7,7 @@ return {
 
   getWhere() {
     const search = InputSearch.value?.trim();
-    const filters = [{ dictionary_fcp_id: { _eq: initJs.id } }];
+    const filters = [{ dictionary_fcp_id: { _eq: init.id } }];
 
     if (search) {
       filters.push({
@@ -15,7 +15,7 @@ return {
       });
     }
 
-    filters.push(...filterJs.getConditions());
+    filters.push(...filter.getConditions());
 
     return { _and: filters };
   },

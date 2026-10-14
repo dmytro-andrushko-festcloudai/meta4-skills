@@ -1,8 +1,8 @@
 return {
-  unique(options) {
+  unique(list) {
     const seen = new Set();
 
-    return options.filter((option) => {
+    return list.filter((option) => {
       if (option.value === null || option.value === undefined || option.value === '' || seen.has(option.value)) {
         return false;
       }
@@ -36,18 +36,18 @@ return {
   },
 
   getVatRateOptions() {
-    const options = [
+    const rates = [
       { value: '20%', label: '20% (базова)' },
       { value: '7%', label: '7%' },
       { value: '0%', label: '0%' },
     ];
-    const current = formJs.getItem()?.vat_rate;
+    const current = form.getItem()?.vat_rate;
 
-    if (current && !options.some(({ value }) => value === current)) {
-      options.push({ value: current, label: current });
+    if (current && !rates.some(({ value }) => value === current)) {
+      rates.push({ value: current, label: current });
     }
 
-    return options;
+    return rates;
   },
 
   getTypeOptions() {

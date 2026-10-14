@@ -27,6 +27,6 @@ return {
 
     this.selectedSort = MenuSorting.selectedValue;
 
-    await tableJs.getData();
+    await table.getData();
   },
 };

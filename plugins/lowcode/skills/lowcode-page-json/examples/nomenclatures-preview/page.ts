@@ -1,14 +1,14 @@
 import { graphqlQuery, node, page, script } from '../../scripts/builder';
-import constantsJsCode from './scripts/constantsJs.txt';
-import initJsCode from './scripts/initJs.txt';
-import nomenclatureJsCode from './scripts/nomenclatureJs.txt';
-import breadcrumbsJsCode from './scripts/breadcrumbsJs.txt';
-import navigationJsCode from './scripts/navigationJs.txt';
-import mainInfoJsCode from './scripts/mainInfoJs.txt';
-import storageJsCode from './scripts/storageJs.txt';
-import regulatedJsCode from './scripts/regulatedJs.txt';
-import clientJsCode from './scripts/clientJs.txt';
-import financeJsCode from './scripts/financeJs.txt';
+import constantsCode from './scripts/constants.txt';
+import initCode from './scripts/init.txt';
+import nomenclatureCode from './scripts/nomenclature.txt';
+import breadcrumbsCode from './scripts/breadcrumbs.txt';
+import navigationCode from './scripts/navigation.txt';
+import mainInfoCode from './scripts/mainInfo.txt';
+import storageCode from './scripts/storage.txt';
+import regulatedCode from './scripts/regulated.txt';
+import clientCode from './scripts/client.txt';
+import financeCode from './scripts/finance.txt';
 
 export default page({
   content: [
@@ -16,13 +16,13 @@ export default page({
       name: 'BreadcrumbsNomenclature',
       forwardDisabled: true,
       items: `{{
-  breadcrumbsJs.getBreadcrumbs()
+  breadcrumbs.getBreadcrumbs()
 }}`,
       onBack: `{{
-  navigationJs.goToList()
+  navigation.goToList()
 }}`,
       onNavigate: `{{
-  breadcrumbsJs.onNavigate(id)
+  breadcrumbs.onNavigate(id)
 }}`,
     }),
     node('Stack', {
@@ -31,7 +31,7 @@ export default page({
         node('Text', {
           name: 'TextTitle',
           text: `{{
-  nomenclatureJs.getItem()?.name || ''
+  nomenclature.getItem()?.name || ''
 }}`,
           variant: 'heading2-m',
         }),
@@ -43,10 +43,10 @@ export default page({
               widthMode: 'hug',
               color: 'secondary',
               disabled: `{{
-  !nomenclatureJs.getItem()
+  !nomenclature.getItem()
 }}`,
               onClick: `{{
-  navigationJs.goToEdit()
+  navigation.goToEdit()
 }}`,
               startIcon: 'PencilSimple',
               text: '',
@@ -61,19 +61,19 @@ export default page({
               verticalAlign: 'center',
               orientation: 'vertical',
               visible: `{{
-  navigationJs.isFromCreate()
+  navigation.isFromCreate()
 }}`,
             }),
             node('Button', {
               name: 'ButtonBack',
               widthMode: 'hug',
               onClick: `{{
-  navigationJs.goToList()
+  navigation.goToList()
 }}`,
               text: 'Повернутись до товарів',
               variant: 'outlined',
               visible: `{{
-  navigationJs.isFromCreate()
+  navigation.isFromCreate()
 }}`,
             }),
           ],
@@ -126,7 +126,7 @@ export default page({
             }),
           ],
           data: `{{
-  mainInfoJs.getData()
+  mainInfo.getData()
 }}`,
           direction: 'row',
           gap: '16px',
@@ -182,7 +182,7 @@ export default page({
             }),
           ],
           data: `{{
-  storageJs.getData()
+  storage.getData()
 }}`,
           direction: 'row',
           gap: '16px',
@@ -238,7 +238,7 @@ export default page({
             }),
           ],
           data: `{{
-  regulatedJs.getData()
+  regulated.getData()
 }}`,
           direction: 'row',
           gap: '16px',
@@ -294,7 +294,7 @@ export default page({
             }),
           ],
           data: `{{
-  clientJs.getData()
+  client.getData()
 }}`,
           direction: 'row',
           gap: '16px',
@@ -350,7 +350,7 @@ export default page({
             }),
           ],
           data: `{{
-  financeJs.getData()
+  finance.getData()
 }}`,
           direction: 'row',
           gap: '16px',
@@ -427,5 +427,5 @@ export default page({
 }}` }
 ),
   ],
-  scripts: [script('constantsJs', constantsJsCode), script('initJs', initJsCode), script('nomenclatureJs', nomenclatureJsCode), script('breadcrumbsJs', breadcrumbsJsCode), script('navigationJs', navigationJsCode), script('mainInfoJs', mainInfoJsCode), script('storageJs', storageJsCode), script('regulatedJs', regulatedJsCode), script('clientJs', clientJsCode), script('financeJs', financeJsCode)],
+  scripts: [script('constants', constantsCode), script('init', initCode), script('nomenclature', nomenclatureCode), script('breadcrumbs', breadcrumbsCode), script('navigation', navigationCode), script('mainInfo', mainInfoCode), script('storage', storageCode), script('regulated', regulatedCode), script('client', clientCode), script('finance', financeCode)],
 });

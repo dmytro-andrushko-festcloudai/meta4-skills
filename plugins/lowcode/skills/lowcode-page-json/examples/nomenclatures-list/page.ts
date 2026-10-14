@@ -1,8 +1,8 @@
 import { graphqlQuery, node, page, script } from '../../scripts/builder';
-import constantsJsCode from './scripts/constantsJs.txt';
-import tableJsCode from './scripts/tableJs.txt';
-import sortingJsCode from './scripts/sortingJs.txt';
-import filterJsCode from './scripts/filterJs.txt';
+import constantsCode from './scripts/constants.txt';
+import tableCode from './scripts/table.txt';
+import sortingCode from './scripts/sorting.txt';
+import filterCode from './scripts/filter.txt';
 
 export default page({
   content: [
@@ -18,7 +18,7 @@ export default page({
           name: 'ButtonCreate',
           widthMode: 'hug',
           onClick: `{{
-  tableJs.onCreate()
+  table.onCreate()
 }}`,
           text: 'Створити товар',
           startIcon: 'Plus',
@@ -42,7 +42,7 @@ export default page({
           debounceDelay: '400',
           label: '',
           onChange: `{{
-  tableJs.getData()
+  table.getData()
 }}`,
           placeholder: 'Пошук',
           startIcon: 'MagnifyingGlass',
@@ -65,10 +65,10 @@ export default page({
               horizontalAlign: 'end',
               widthMode: 'hug',
               items: `{{
-  sortingJs.getItems(MenuSorting.selectedValue)
+  sorting.getItems(MenuSorting.selectedValue)
 }}`,
               onItemClick: `{{
-  sortingJs.onSort()
+  sorting.onSort()
 }}`,
               selectable: true,
             }),
@@ -80,7 +80,7 @@ export default page({
                   id: 'name',
                   label: 'Назва товару',
                   onClear: `{{
-  filterJs.onClearCategory(id)
+  filter.onClearCategory(id)
 }}`,
                   onSelect: '',
                   tag: `{{
@@ -94,7 +94,7 @@ export default page({
                       debounceDelay: '400',
                       label: '',
                       onChange: `{{
-  filterJs.onSearch()
+  filter.onSearch()
 }}`,
                       placeholder: 'Пошук',
                       startIcon: 'MagnifyingGlass',
@@ -102,7 +102,7 @@ export default page({
                     node('CheckboxGroup', {
                       name: 'CheckboxGroupName',
                       label: '',
-                      options: '{{ filterJs.getNameOptions() }}',
+                      options: '{{ filter.getNameOptions() }}',
                     }),
                   ],
                 },
@@ -110,7 +110,7 @@ export default page({
                   id: 'manufacturer',
                   label: 'Виробник',
                   onClear: `{{
-  filterJs.onClearCategory(id)
+  filter.onClearCategory(id)
 }}`,
                   onSelect: '',
                   tag: `{{
@@ -124,7 +124,7 @@ export default page({
                       debounceDelay: '400',
                       label: '',
                       onChange: `{{
-  filterJs.onSearch()
+  filter.onSearch()
 }}`,
                       placeholder: 'Пошук',
                       startIcon: 'MagnifyingGlass',
@@ -132,7 +132,7 @@ export default page({
                     node('CheckboxGroup', {
                       name: 'CheckboxGroupManufacturer',
                       label: '',
-                      options: '{{ filterJs.getManufacturerOptions() }}',
+                      options: '{{ filter.getManufacturerOptions() }}',
                     }),
                   ],
                 },
@@ -140,7 +140,7 @@ export default page({
                   id: 'country',
                   label: 'Країна походження',
                   onClear: `{{
-  filterJs.onClearCategory(id)
+  filter.onClearCategory(id)
 }}`,
                   onSelect: '',
                   tag: `{{
@@ -154,7 +154,7 @@ export default page({
                       debounceDelay: '400',
                       label: '',
                       onChange: `{{
-  filterJs.onSearch()
+  filter.onSearch()
 }}`,
                       placeholder: 'Пошук',
                       startIcon: 'MagnifyingGlass',
@@ -162,35 +162,35 @@ export default page({
                     node('CheckboxGroup', {
                       name: 'CheckboxGroupCountry',
                       label: '',
-                      options: '{{ filterJs.getCountryOptions() }}',
+                      options: '{{ filter.getCountryOptions() }}',
                     }),
                   ],
                 },
               ],
               defaultCategory: 'name',
               onApply: `{{
-  filterJs.onApply()
+  filter.onApply()
 }}`,
               onClear: `{{
-  filterJs.onClear()
+  filter.onClear()
 }}`,
               onClose: `{{
-  filterJs.onClose()
+  filter.onClose()
 }}`,
               triggerTag: `{{
-  filterJs.isActive() ? filterJs.selectedQty() : ''
+  filter.isActive() ? filter.selectedQty() : ''
 }}`,
               startIcon: `{{
-  filterJs.isActive() ? "FCFunnelActive" : "Funnel"
+  filter.isActive() ? "FCFunnelActive" : "Funnel"
 }}`,
               disableClear: `{{
-  filterJs.isEmpty()
+  filter.isEmpty()
 }}`,
               disableApply: `{{
-  !filterJs.isChanged()
+  !filter.isChanged()
 }}`,
               onQuickClear: `{{
-  filterJs.onQuickClear()
+  filter.onQuickClear()
 }}`,
             }),
           ],
@@ -216,7 +216,7 @@ export default page({
   getNomenclatures.run()
 }}`,
       onPageSizeChange: `{{
-  tableJs.getData()
+  table.getData()
 }}`,
       serverSidePagination: true,
       totalCount: `{{
@@ -322,10 +322,10 @@ export default page({
                   heightMode: 'fill',
                   verticalAlign: 'center',
                   items: `{{
-  tableJs.getRowActions()
+  table.getRowActions()
 }}`,
                   onItemClick: `{{
-  tableJs.onMenuClick(value, currentItem)
+  table.onMenuClick(value, currentItem)
 }}`,
                 }),
                 node('Icon', {
@@ -333,7 +333,7 @@ export default page({
                   horizontalAlign: 'center',
                   icon: 'CaretRight',
                   onClick: `{{
-  tableJs.onPreview(currentItem)
+  table.onPreview(currentItem)
 }}`,
                 }),
               ],
@@ -350,7 +350,7 @@ export default page({
       enableSorting: false,
       itemKey: 'fcp_id',
       onDoubleRowClick: `{{
-  tableJs.onPreview(currentItem)
+  table.onPreview(currentItem)
 }}`,
     }),
   ],
@@ -377,7 +377,7 @@ export default page({
   }
 }`,
   { variables: `{{
-  tableJs.getVariables()
+  table.getVariables()
 }}` }
 ),
     graphqlQuery(
@@ -409,9 +409,9 @@ export default page({
   }
 }`,
   { variables: `{{
-  filterJs.getSearchVariables()
+  filter.getSearchVariables()
 }}` }
 ),
   ],
-  scripts: [script('constantsJs', constantsJsCode), script('tableJs', tableJsCode), script('sortingJs', sortingJsCode), script('filterJs', filterJsCode)],
+  scripts: [script('constants', constantsCode), script('table', tableCode), script('sorting', sortingCode), script('filter', filterCode)],
 });

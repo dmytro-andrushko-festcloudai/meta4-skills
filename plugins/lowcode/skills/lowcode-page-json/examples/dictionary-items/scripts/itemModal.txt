@@ -48,7 +48,7 @@ return {
       const isEdit = Boolean(this.currentItem);
       const { data, error } = isEdit
         ? await updateDictionaryItem.run({ id: this.currentItem.fcp_id, object })
-        : await createDictionaryItem.run({ object: { ...object, dictionary_fcp_id: initJs.id } });
+        : await createDictionaryItem.run({ object: { ...object, dictionary_fcp_id: init.id } });
 
       if (error) throw new Error(error);
 
@@ -63,7 +63,7 @@ return {
 
       this.close();
 
-      await itemsJs.getData();
+      await items.getData();
     } catch (error) {
       app.showAlert(error?.message || 'Не вдалося зберегти значення', 'error');
     } finally {

@@ -1,12 +1,12 @@
 return {
   getLines() {
-    if (!mergeJs.canPreview()) return [];
+    if (!merge.canPreview()) return [];
 
-    const rootId = mergeJs.targetId;
-    const source = mergeJs.getSourceNode();
-    const parentId = mergeJs.getTargetParentId();
-    const path = new Set(treeJs.getPath(parentId));
-    const lines = [{ text: treeJs.itemsById[rootId]?.name || '', highlighted: false }];
+    const rootId = merge.targetId;
+    const source = merge.getSourceNode();
+    const parentId = merge.getTargetParentId();
+    const path = new Set(tree.getPath(parentId));
+    const lines = [{ text: tree.itemsById[rootId]?.name || '', highlighted: false }];
 
     const childrenOf = (node, highlighted) => {
       const children = (node.children || [])
@@ -28,7 +28,7 @@ return {
       });
     };
 
-    walk(childrenOf({ id: rootId, children: treeJs.getNodes(rootId) }, false), '');
+    walk(childrenOf({ id: rootId, children: tree.getNodes(rootId) }, false), '');
 
     return lines.map((line, index) => ({ id: index + 1, ...line }));
   },

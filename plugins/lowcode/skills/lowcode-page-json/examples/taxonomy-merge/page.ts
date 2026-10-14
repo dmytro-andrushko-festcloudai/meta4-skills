@@ -1,10 +1,10 @@
 import { graphqlQuery, node, page, script } from '../../scripts/builder';
-import constantsJsCode from './scripts/constantsJs.txt';
-import initJsCode from './scripts/initJs.txt';
-import breadcrumbsJsCode from './scripts/breadcrumbsJs.txt';
-import treeJsCode from './scripts/treeJs.txt';
-import mergeJsCode from './scripts/mergeJs.txt';
-import previewJsCode from './scripts/previewJs.txt';
+import constantsCode from './scripts/constants.txt';
+import initCode from './scripts/init.txt';
+import breadcrumbsCode from './scripts/breadcrumbs.txt';
+import treeCode from './scripts/tree.txt';
+import mergeCode from './scripts/merge.txt';
+import previewCode from './scripts/preview.txt';
 
 export default page({
   content: [
@@ -22,13 +22,13 @@ export default page({
                   margin: '0 0 8px',
                   forwardDisabled: true,
                   items: `{{
-  breadcrumbsJs.getBreadcrumbs()
+  breadcrumbs.getBreadcrumbs()
 }}`,
                   onBack: `{{
-  breadcrumbsJs.onBack()
+  breadcrumbs.onBack()
 }}`,
                   onNavigate: `{{
-  breadcrumbsJs.onNavigate(id)
+  breadcrumbs.onNavigate(id)
 }}`,
                 }),
                 node('Text', {
@@ -49,10 +49,10 @@ export default page({
               name: 'ButtonMerge',
               widthMode: 'hug',
               disabled: `{{
-  !mergeJs.canMerge()
+  !merge.canMerge()
 }}`,
               onClick: `{{
-  mergeJs.onMerge()
+  merge.onMerge()
 }}`,
               size: 'lg',
               text: 'Об’єднати',
@@ -78,7 +78,7 @@ export default page({
                   name: 'TextDuplicatesTitle',
                   color: '#DD9126',
                   text: `{{
-  mergeJs.getDuplicatesTitle()
+  merge.getDuplicatesTitle()
 }}`,
                   variant: 'body3-m',
                 }),
@@ -93,7 +93,7 @@ export default page({
                   customCss: 'white-space: pre-line;',
                   color: '#555D6D',
                   text: `{{
-  mergeJs.getDuplicatesList()
+  merge.getDuplicatesList()
 }}`,
                   variant: 'body4-r',
                 }),
@@ -108,7 +108,7 @@ export default page({
           direction: 'row',
           gap: '12px',
           visible: `{{
-  mergeJs.getDuplicates().length > 0
+  merge.getDuplicates().length > 0
 }}`,
         }),
         node('Stack', {
@@ -122,14 +122,14 @@ export default page({
                   required: true,
                   marker: true,
                   disabled: `{{
-  mergeJs.loading
+  merge.loading
 }}`,
                   label: 'Джерельна таксономія',
                   onChange: `{{
-  mergeJs.onSourceTaxonomyChange(value)
+  merge.onSourceTaxonomyChange(value)
 }}`,
                   options: `{{
-  treeJs.getRootOptions(mergeJs.targetId)
+  tree.getRootOptions(merge.targetId)
 }}`,
                   placeholder: 'Оберіть таксономію',
                 }),
@@ -141,7 +141,7 @@ max-height: 560px;
 overflow: auto;`,
                   heightMode: 'fill',
                   nodes: `{{
-  treeJs.getNodes(mergeJs.sourceId)
+  tree.getNodes(merge.sourceId)
 }}`,
                 }),
               ],
@@ -158,14 +158,14 @@ overflow: auto;`,
                   required: true,
                   marker: true,
                   disabled: `{{
-  mergeJs.loading
+  merge.loading
 }}`,
                   label: 'Цільова таксономія',
                   onChange: `{{
-  mergeJs.onTargetTaxonomyChange(value)
+  merge.onTargetTaxonomyChange(value)
 }}`,
                   options: `{{
-  treeJs.getRootOptions(mergeJs.sourceId)
+  tree.getRootOptions(merge.sourceId)
 }}`,
                   placeholder: 'Оберіть таксономію',
                 }),
@@ -177,7 +177,7 @@ max-height: 560px;
 overflow: auto;`,
                   heightMode: 'fill',
                   nodes: `{{
-  treeJs.getNodes(mergeJs.targetId)
+  tree.getNodes(merge.targetId)
 }}`,
                 }),
               ],
@@ -239,7 +239,7 @@ overflow: auto;`,
                     }),
                   ],
                   data: `{{
-  previewJs.getLines()
+  preview.getLines()
 }}`,
                   gap: '2px',
                   showAddButton: false,
@@ -258,7 +258,7 @@ overflow: auto;`,
           borderRadius: '8px',
           gap: '16px',
           visible: `{{
-  mergeJs.canPreview()
+  merge.canPreview()
 }}`,
         }),
       ],
@@ -299,5 +299,5 @@ overflow: auto;`,
 }}` }
 ),
   ],
-  scripts: [script('constantsJs', constantsJsCode), script('initJs', initJsCode), script('breadcrumbsJs', breadcrumbsJsCode), script('treeJs', treeJsCode), script('mergeJs', mergeJsCode), script('previewJs', previewJsCode)],
+  scripts: [script('constants', constantsCode), script('init', initCode), script('breadcrumbs', breadcrumbsCode), script('tree', treeCode), script('merge', mergeCode), script('preview', previewCode)],
 });

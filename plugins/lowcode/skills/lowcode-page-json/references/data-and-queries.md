@@ -8,16 +8,16 @@ Contents: page structure, query nodes, scripts, the `app` object, common list an
 { "root": { "props": { "queries": [], "modules": [], "scripts": [] } }, "content": [ /* blocks */ ], "zones": {} }
 ```
 
-`scripts` are named objects other code reaches by name (`constantsJs`, `tableJs`, `formJs`). `queries` are named requests reached by name (`getLegalEntities.run()`, `getLegalEntities.data`). Blocks are reached by their `name` (`Table1.setPage(1)`, `Input1.value`), which the builder assigns as `Type1`, `Type2`, ... in creation order. `scripts/builder.ts` exports `page`, `script`, `graphqlQuery`, `node`, `stack`, `text`, `icon`, `button`.
+`scripts` are named objects other code reaches by name (`constants`, `table`, `form`). `queries` are named requests reached by name (`getLegalEntities.run()`, `getLegalEntities.data`). Blocks are reached by their `name` (`Table1.setPage(1)`, `Input1.value`), which the builder assigns as `Type1`, `Type2`, ... in creation order. `scripts/builder.ts` exports `page`, `script`, `graphqlQuery`, `node`, `stack`, `text`, `icon`, `button`.
 
-**Naming and folders (newer pages, `security-service/schemas/security-roles.json`):** name a script by its role without the `Js` suffix (`table`, `filter`, `drawer`, `access`, `permissions`, `i18n`, `translations`, `constants`, `init`); the older examples below still use the suffix. `root.props.folders` is a flat list `{ id, name }` shown in the code panel; give every script and query a `folderId` and group by domain, not by kind: `core` (init, constants, permissions), `localization` (i18n, translations), then one folder per feature area (`table`, `filter`, `drawer`, `access`) holding that area's scripts and the queries it calls. Folders do not nest. In the builder: `script(name, code, "table")` and `graphqlQuery(name, query, { folder: "table" })`; `page()` emits `root.props.folders` for the folders used. Names must not be reserved (`validateName`), so `filter`, `table` and similar are fine but `top`, `self`, `parent` are not.
+**Naming and folders:** js files are named after their role (`table`, `filter`, `constants`) and, together with the queries, grouped into code-panel folders by area. The rules, the builder calls and a worked example are in `references/scripts-and-queries.md`.
 
 ## Query nodes
 
 GraphQL (what every existing page uses):
 
 ```json
-{ "id": "<uuid>", "kind": "graphql", "name": "getThings", "endpoint": "{{ constantsJs.GRAPHQL_URL }}",
+{ "id": "<uuid>", "kind": "graphql", "name": "getThings", "endpoint": "{{ constants.GRAPHQL_URL }}",
   "operation": "query", "query": "query GetThings { things: schema_things_v1 { fcp_id name } }",
   "variables": "{}", "headers": "{{ { \"Authorization\": `Bearer ${app.token}` } }}", "runOnPageLoad": true }
 ```
@@ -44,7 +44,7 @@ return {
 };
 ```
 
-Conventions from `legal-entities`: `constantsJs` holds `GRAPHQL_URL` (navigation is relative, so there is no `basePath`: see "Navigation" below); one script per concern (table, filter, form, breadcrumbs, options); a data-shaping script turns the query response into the rows the blocks bind to (`getData()` returning `{ fcp_id, name, ... }[]`), so bindings stay one-liners.
+Conventions from `legal-entities`: `constants` holds `GRAPHQL_URL` (navigation is relative, so there is no `basePath`: see "Navigation" below); one script per concern (table, filter, form, breadcrumbs, options); a data-shaping script turns the query response into the rows the blocks bind to (`getData()` returning `{ fcp_id, name, ... }[]`), so bindings stay one-liners.
 
 **Every endpoint and service URL lives in the page's constants script, and queries read only from there.** One place to point a page at a mock or another environment:
 
@@ -57,7 +57,7 @@ return {
 
 GraphQL queries use `"endpoint": "{{ constants.GRAPHQL_URL }}"`; REST queries `"url": "{{ constants.SECURITY_SERVICE_URL }}/api/v1/roles?role={{ encodeURIComponent(params.role) }}"` (inside a template-literal URL: `${constants.SECURITY_SERVICE_URL}`). `app.env` exposes `GRAPHQL_URL`, `GRAPHQL_WS_URL` and `SECURITY_SERVICE_URL` (from `NX_PUBLIC_JWT_SERVICE_API_URL`); never hardcode a host in a query. Security-service REST: activate `POST /api/v1/roles?role=<name>`, delete a published role `DELETE /api/v1/roles?role=<name>` (not the `securityservice_deleteRole` Hasura action); a non-2xx response becomes `result.error`.
 
-**Editing a published (active) role never touches it directly** (old Appsmith flow, `roleJs` in `security-service/schemas/role-form.json`): look up a `DRAFT` role with the same name (`getRoleDraft`); if one exists, diff the selection against the draft's own permissions and update the draft; otherwise create a new `DRAFT` with that name and all selected permissions. Only Activate then calls the activate endpoint with the name, and the backend swaps the draft in. When the form opens on a published role that has a draft, load the draft's permissions.
+**Editing a published (active) role never touches it directly** (old Appsmith flow, `role` in `security-service/schemas/role-form.json`): look up a `DRAFT` role with the same name (`getRoleDraft`); if one exists, diff the selection against the draft's own permissions and update the draft; otherwise create a new `DRAFT` with that name and all selected permissions. Only Activate then calls the activate endpoint with the name, and the backend swaps the draft in. When the form opens on a published role that has a draft, load the draft's permissions.
 
 Blocked identifiers apply here too (see SKILL.md). Avoid naming a local `parent`, `top`, `self`.
 
@@ -81,7 +81,7 @@ Readable in bindings: `app.URL` (`.pathname`, `.query`, `.params`, `.base`), `ap
 
 Count the segments of the page's own URL: each `..` removes one. A form used for both create (`…/create`) and edit (`…/:id/edit`) needs both: ``app.navigate(constants.roleId ? '../..' : '..')``.
 
-The older pages mirrored in `examples/` (nomenclatures, dictionaries, taxonomies) still build links from `constantsJs.basePath`; use the relative form in new pages and do not copy the `basePath` constant.
+The older pages mirrored in `examples/` (nomenclatures, dictionaries, taxonomies) still build links from `constants.basePath`; use the relative form in new pages and do not copy the `basePath` constant.
 
 Keep absolute paths (`/uk/...`) only for a target outside the page's own area; other hosts mount it elsewhere. Relative links need no change to `router.tsx` beyond registering each route, and the shell builds the same URLs from the Hasura view slugs, so create the views with slugs that match the links (`:id/edit`, not `edit/:id`).
 
@@ -106,7 +106,7 @@ Server-side list (from `legal-entities/schemas/list.json`): the query takes `off
   };
   ```
 
-- **A server-paged picker with a "Selected" tab** (`TableEmployees` in `security-roles.json`): keep the selection in a script map keyed by id, so it survives page changes and new searches. Bind `serverSidePagination: "{{ accessJs.tab !== 'selected' }}"` so the selected tab pages in the browser over the map. Reset with `TableEmployees.setPage(1)` on open, on search, on page-size change and on tab change, and re-fetch when going back to the "all" tab.
+- **A server-paged picker with a "Selected" tab** (`TableEmployees` in `security-roles.json`): keep the selection in a script map keyed by id, so it survives page changes and new searches. Bind `serverSidePagination: "{{ access.tab !== 'selected' }}"` so the selected tab pages in the browser over the map. Reset with `TableEmployees.setPage(1)` on open, on search, on page-size change and on tab change, and re-fetch when going back to the "all" tab.
 
 ## Checking a query or mutation result
 
@@ -130,13 +130,13 @@ if (!result?.data?.insert_securityservice_person_roles_v0?.affected_rows) {
 - When several mutations run in one operation, check each one only when it had work to do: `if ((toDelete.length && !deleted) || (toAdd.length && !added))`. A delete of optional child rows that may legitimately match nothing is not checked; the parent's result is.
 - Hasura actions (`securityservice_deleteRole`, activate) return a custom shape. Ask what a failure looks like instead of guessing a check.
 
-Forms: `examples/nomenclatures-form` serves create and edit from one page. `initJs` reads `app.URL.params.id` and loads the record when present, lookup queries run on page load, and `formJs` computes the submit-disabled state from each field's `valid` and `dirty` and performs the mutations. `legal-entities` splits the same thing into `create.json` and `edit.json`. Do not reinvent either.
+Forms: `examples/nomenclatures-form` serves create and edit from one page. `init` reads `app.URL.params.id` and loads the record when present, lookup queries run on page load, and `form` computes the submit-disabled state from each field's `valid` and `dirty` and performs the mutations. `legal-entities` splits the same thing into `create.json` and `edit.json`. Do not reinvent either.
 
 Modals (`examples/dictionary-items`): one script per modal owns `currentItem`, `toggleModal(item)`, `close()`, `onSubmit()` and a `loading` flag; the modal's fields are reset after the close animation, and the list is re-fetched after a successful mutation.
 
 ## Mock-first data
 
-When the API is not ready, put the data in a script and bind to it exactly as if it were a query result, so swapping in the real query changes only the binding: `data: '{{ itemsJs.rows }}'` becomes `'{{ getItems.data.items }}'`. `examples/nomenclatures-preview/scripts/*.txt` shows the shape: small scripts that return the label/value rows a `Repeater` renders. Always say in the report which parts are mock.
+When the API is not ready, put the data in a script and bind to it exactly as if it were a query result, so swapping in the real query changes only the binding: `data: '{{ items.rows }}'` becomes `'{{ getItems.data.items }}'`. `examples/nomenclatures-preview/scripts/*.txt` shows the shape: small scripts that return the label/value rows a `Repeater` renders. Always say in the report which parts are mock.
 
 ## Hasura notes
 

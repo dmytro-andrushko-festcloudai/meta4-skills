@@ -10,7 +10,7 @@ return {
   },
 
   getItemsCount() {
-    return dictionaryJs.getDictionary()?.total?.aggregate?.count ?? 0;
+    return dictionary.getDictionary()?.total?.aggregate?.count ?? 0;
   },
 
   getItemsLabel(count) {
@@ -25,7 +25,7 @@ return {
   },
 
   getDescription() {
-    const name = dictionaryJs.getDictionary()?.name || '';
+    const name = dictionary.getDictionary()?.name || '';
     const count = this.getItemsCount();
 
     if (!count) {
@@ -39,11 +39,11 @@ return {
     this.loading = true;
 
     try {
-      const { error: itemsError } = await deleteDictionaryItems.run({ id: initJs.id });
+      const { error: itemsError } = await deleteDictionaryItems.run({ id: init.id });
 
       if (itemsError) throw new Error(itemsError);
 
-      const { data, error } = await deleteDictionary.run({ id: initJs.id });
+      const { data, error } = await deleteDictionary.run({ id: init.id });
 
       if (error) throw new Error(error);
 
@@ -54,7 +54,7 @@ return {
       app.showAlert('Словник успішно видалено', 'success');
 
       this.close();
-      dictionaryJs.goToList();
+      dictionary.goToList();
     } catch (error) {
       app.showAlert(error?.message || 'Не вдалося видалити словник', 'error');
     } finally {

@@ -30,15 +30,17 @@ Decide up front which actions each view exposes and where each one navigates, th
 
 ## Conventions every view follows
 
-- **Same `constantsJs`** in every view: `GRAPHQL_URL` (and the other endpoints). There is no `basePath`: navigation is relative to the current URL (`'create'`, `` `${id}/edit` ``, `'..'`, `'../..'`), so it works under the dev router and under the shell's workspace routes alike. Table and rules: `references/data-and-queries.md`, "Navigation".
+Js file and query names, and how they are grouped into folders, are in `references/scripts-and-queries.md`.
+
+- **Same `constants`** in every view: `GRAPHQL_URL` (and the other endpoints). There is no `basePath`: navigation is relative to the current URL (`'create'`, `` `${id}/edit` ``, `'..'`, `'../..'`), so it works under the dev router and under the shell's workspace routes alike. Table and rules: `references/data-and-queries.md`, "Navigation".
 - **Same block names across views** for the same role: `InputSearch`, `TableX`, `MenuSorting`, `FilterX`, `ModalX`. Scripts reach blocks by name, so semantic names are what make a script readable and copyable between views.
-- **`initJs`** reads `app.URL.params.id`, loads the record when present, and returns `{ id }`. In editor mode (`app.mode === 'editor'`) there is no route param, so fall back to a real id so the preview has data.
-- **List data** lives in a `tableJs` (`getData()` resets to page 1 then runs the query; `getVariables()` / `getWhere()` builds it), `sortingJs` (options + `getOrderBy()`), `filterJs` (applied vs draft selection). See `examples/nomenclatures-list`.
+- **`init`** reads `app.URL.params.id`, loads the record when present, and returns `{ id }`. In editor mode (`app.mode === 'editor'`) there is no route param, so fall back to a real id so the preview has data.
+- **List data** lives in a `table` (`getData()` resets to page 1 then runs the query; `getVariables()` / `getWhere()` builds it), `sorting` (options + `getOrderBy()`), `filter` (applied vs draft selection). See `examples/nomenclatures-list`.
 - **Modals** each get a script owning `currentItem`, `toggleModal(item)`, `close()`, `onSubmit()`, `loading`. `close()` closes first and clears fields after ~100ms so the content does not flash empty; it skips the clear if the modal was reopened meanwhile. See `examples/dictionary-items`.
 - **Mutations** check `error`, then check the returned key (`data?.item?.fcp_id`) because Hasura returns `null` for a row the user may not touch, then `app.showAlert(..., 'success' | 'error')`, then re-run the list query.
 - **Cascades:** when a parent row owns child rows, delete the children first (`deleteDictionaryItems`, then `deleteDictionary`).
 - **One panel, several entry points: reuse it with a mode.** When two flows open nearly the same drawer or modal (grant a role to employees from the role vs. pick the role first from the employees tab), keep one panel and give its script a `mode`. The differences become bindings on `mode` (an extra role `Select` shown only in one mode, the title, the submit label, what is reloaded after saving) and two openers (`open(role)`, `openForEmployees()`) that set the mode and share one `show()` reset. A second copy of the panel duplicates the selection and submit logic and drifts. Conditional fields follow the chosen record, for example a workgroup select shown only when the chosen role has a workgroup condition, and reset when the role changes.
-- **Breadcrumbs** come from a `breadcrumbsJs` returning `[{ id, label }]` and an `onNavigate(id)`; the last label falls back to `'Завантаження...'` while the query loads.
+- **Breadcrumbs** come from a `breadcrumbs` returning `[{ id, label }]` and an `onNavigate(id)`; the last label falls back to `'Завантаження...'` while the query loads.
 - **Required inputs:** a `notBlank(field)` helper plus `valid` and `dirty` on each field drive `getDisableSubmit()`.
 
 ## Build and wire

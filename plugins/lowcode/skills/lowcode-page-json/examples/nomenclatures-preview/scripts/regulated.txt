@@ -1,7 +1,7 @@
 return {
   getData() {
-    const item = nomenclatureJs.getItem() || {};
-    const { text, yesNo } = nomenclatureJs;
+    const item = nomenclature.getItem() || {};
+    const { text, yesNo } = nomenclature;
     const uktzed = item.nomenclatures_code_uktzed_fcp_id_codes_uktzed;
 
     return [

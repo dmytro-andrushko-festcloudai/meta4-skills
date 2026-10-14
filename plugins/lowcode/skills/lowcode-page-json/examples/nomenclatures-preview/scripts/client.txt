@@ -1,7 +1,7 @@
 return {
   getData() {
-    const item = nomenclatureJs.getItem() || {};
-    const { text, yesNo } = nomenclatureJs;
+    const item = nomenclature.getItem() || {};
+    const { text, yesNo } = nomenclature;
     const type = item.nomenclatures_nomenclature_type_fcp_id_nomenclature_types;
     const product = item.nomenclatures_product_fcp_id_products;
 

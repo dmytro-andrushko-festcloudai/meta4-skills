@@ -20,15 +20,15 @@ export default page({
   content: [
     stack({ direction: 'row', gap: '12px', verticalAlign: 'center' }, [
       text('Example', 'heading2-m', 'text-title'),
-      button('Create', { variant: 'contained', widthMode: 'hug', visible: "{{ permissionsJs.can('create') }}" }),
+      button('Create', { variant: 'contained', widthMode: 'hug', visible: "{{ permissions.can('create') }}" }),
       button('Delete', {
         color: 'error',
         variant: 'outlined',
         widthMode: 'hug',
-        visible: "{{ permissionsJs.can('remove') }}",
+        visible: "{{ permissions.can('remove') }}",
       }),
     ]),
   ],
   queries: [getPermissions],
-  scripts: [script('constantsJs', constantsScript), script('permissionsJs', permissionsScript)],
+  scripts: [script('constants', constantsScript), script('permissions', permissionsScript)],
 });

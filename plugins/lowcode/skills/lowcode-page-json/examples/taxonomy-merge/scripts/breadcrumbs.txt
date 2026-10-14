@@ -8,11 +8,11 @@ return {
 
   onNavigate(id) {
     if (id === 'home') {
-      app.navigate(constantsJs.basePath);
+      app.navigate(constants.basePath);
     }
   },
 
   onBack() {
-    app.navigate(constantsJs.basePath);
+    app.navigate(constants.basePath);
   },
 };

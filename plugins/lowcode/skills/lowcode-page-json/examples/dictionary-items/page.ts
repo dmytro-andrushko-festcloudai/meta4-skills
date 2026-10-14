@@ -1,15 +1,15 @@
 import { graphqlQuery, node, page, script } from '../../scripts/builder';
-import constantsJsCode from './scripts/constantsJs.txt';
-import initJsCode from './scripts/initJs.txt';
-import dictionaryJsCode from './scripts/dictionaryJs.txt';
-import breadcrumbsJsCode from './scripts/breadcrumbsJs.txt';
-import itemsJsCode from './scripts/itemsJs.txt';
-import sortingJsCode from './scripts/sortingJs.txt';
-import itemModalJsCode from './scripts/itemModalJs.txt';
-import deleteItemJsCode from './scripts/deleteItemJs.txt';
-import dictEditJsCode from './scripts/dictEditJs.txt';
-import dictDeleteJsCode from './scripts/dictDeleteJs.txt';
-import filterJsCode from './scripts/filterJs.txt';
+import constantsCode from './scripts/constants.txt';
+import initCode from './scripts/init.txt';
+import dictionaryCode from './scripts/dictionary.txt';
+import breadcrumbsCode from './scripts/breadcrumbs.txt';
+import itemsCode from './scripts/items.txt';
+import sortingCode from './scripts/sorting.txt';
+import itemModalCode from './scripts/itemModal.txt';
+import deleteItemCode from './scripts/deleteItem.txt';
+import dictEditCode from './scripts/dictEdit.txt';
+import dictDeleteCode from './scripts/dictDelete.txt';
+import filterCode from './scripts/filter.txt';
 
 export default page({
   content: [
@@ -17,13 +17,13 @@ export default page({
       name: 'BreadcrumbsItems',
       forwardDisabled: true,
       items: `{{
-  breadcrumbsJs.getBreadcrumbs()
+  breadcrumbs.getBreadcrumbs()
 }}`,
       onBack: `{{
-  dictionaryJs.goToList()
+  dictionary.goToList()
 }}`,
       onNavigate: `{{
-  breadcrumbsJs.onNavigate(id)
+  breadcrumbs.onNavigate(id)
 }}`,
     }),
     node('Stack', {
@@ -36,7 +36,7 @@ export default page({
               name: 'TextTitle',
               color: '#161A22',
               text: `{{
-  dictionaryJs.getDictionary()?.name || ''
+  dictionary.getDictionary()?.name || ''
 }}`,
               variant: 'heading2-m',
             }),
@@ -44,10 +44,10 @@ export default page({
               name: 'TextSubtitle',
               color: '#858C99',
               text: `{{
-  dictionaryJs.getDictionary()?.description || ''
+  dictionary.getDictionary()?.description || ''
 }}`,
               visible: `{{
-  Boolean(dictionaryJs.getDictionary()?.description)
+  Boolean(dictionary.getDictionary()?.description)
 }}`,
             }),
           ],
@@ -61,10 +61,10 @@ export default page({
               widthMode: 'hug',
               color: 'secondary',
               disabled: `{{
-  !dictionaryJs.getDictionary()
+  !dictionary.getDictionary()
 }}`,
               onClick: `{{
-  dictEditJs.toggleModal()
+  dictEdit.toggleModal()
 }}`,
               startIcon: 'PencilSimple',
               text: '',
@@ -75,10 +75,10 @@ export default page({
               widthMode: 'hug',
               color: 'secondary',
               disabled: `{{
-  !dictionaryJs.getDictionary()
+  !dictionary.getDictionary()
 }}`,
               onClick: `{{
-  dictDeleteJs.toggleModal()
+  dictDelete.toggleModal()
 }}`,
               startIcon: 'Trash',
               text: '',
@@ -88,10 +88,10 @@ export default page({
               name: 'ButtonAddItem',
               widthMode: 'hug',
               disabled: `{{
-  !dictionaryJs.canAddItems()
+  !dictionary.canAddItems()
 }}`,
               onClick: `{{
-  itemModalJs.toggleModal()
+  itemModal.toggleModal()
 }}`,
               size: 'lg',
               startIcon: 'Plus',
@@ -120,7 +120,7 @@ export default page({
           debounceDelay: '400',
           label: '',
           onChange: `{{
-  itemsJs.getData()
+  items.getData()
 }}`,
           placeholder: 'Пошук',
           startIcon: 'MagnifyingGlass',
@@ -143,10 +143,10 @@ export default page({
               horizontalAlign: 'end',
               widthMode: 'hug',
               items: `{{
-  sortingJs.getItems(MenuSorting.selectedValue)
+  sorting.getItems(MenuSorting.selectedValue)
 }}`,
               onItemClick: `{{
-  sortingJs.onSort()
+  sorting.onSort()
 }}`,
               selectable: true,
             }),
@@ -158,7 +158,7 @@ export default page({
                   id: 'name',
                   label: 'Назва',
                   onClear: `{{
-  filterJs.onClearCategory(id)
+  filter.onClearCategory(id)
 }}`,
                   onSelect: '',
                   tag: `{{
@@ -169,7 +169,7 @@ export default page({
                       name: 'InputFilterName',
                       label: '',
                       onChange: `{{
-  filterJs.onLetterSearch()
+  filter.onLetterSearch()
 }}`,
                       placeholder: 'Пошук',
                       startIcon: 'MagnifyingGlass',
@@ -177,7 +177,7 @@ export default page({
                     node('CheckboxGroup', {
                       name: 'CheckboxGroupName',
                       label: '',
-                      options: '{{ filterJs.getLetterOptions(\'name\') }}',
+                      options: '{{ filter.getLetterOptions(\'name\') }}',
                     }),
                   ],
                 },
@@ -185,7 +185,7 @@ export default page({
                   id: 'status',
                   label: 'Статус',
                   onClear: `{{
-  filterJs.onClearCategory(id)
+  filter.onClearCategory(id)
 }}`,
                   onSelect: '',
                   tag: `{{
@@ -195,35 +195,35 @@ export default page({
                     node('CheckboxGroup', {
                       name: 'CheckboxGroupStatus',
                       label: '',
-                      options: '{{ filterJs.getStatusOptions() }}',
+                      options: '{{ filter.getStatusOptions() }}',
                     }),
                   ],
                 },
               ],
               defaultCategory: 'name',
               disableApply: `{{
-  !filterJs.isChanged()
+  !filter.isChanged()
 }}`,
               disableClear: `{{
-  filterJs.isEmpty()
+  filter.isEmpty()
 }}`,
               onApply: `{{
-  filterJs.onApply()
+  filter.onApply()
 }}`,
               onClear: `{{
-  filterJs.onClear()
+  filter.onClear()
 }}`,
               onClose: `{{
-  filterJs.onClose()
+  filter.onClose()
 }}`,
               onQuickClear: `{{
-  filterJs.onQuickClear()
+  filter.onQuickClear()
 }}`,
               startIcon: `{{
-  filterJs.isActive() ? "FCFunnelActive" : "Funnel"
+  filter.isActive() ? "FCFunnelActive" : "Funnel"
 }}`,
               triggerTag: `{{
-  filterJs.isActive() ? filterJs.selectedQty() : ''
+  filter.isActive() ? filter.selectedQty() : ''
 }}`,
             }),
           ],
@@ -366,7 +366,7 @@ white-space: nowrap;`,
                   widthMode: 'hug',
                   icon: 'PencilSimple',
                   onClick: `{{
-  itemModalJs.toggleModal(currentItem)
+  itemModal.toggleModal(currentItem)
 }}`,
                 }),
                 node('Icon', {
@@ -374,7 +374,7 @@ white-space: nowrap;`,
                   widthMode: 'hug',
                   icon: 'Trash',
                   onClick: `{{
-  deleteItemJs.toggleModal(currentItem)
+  deleteItem.toggleModal(currentItem)
 }}`,
                 }),
               ],
@@ -403,7 +403,7 @@ white-space: nowrap;`,
   getDictionaryItems.run()
 }}`,
       onPageSizeChange: `{{
-  itemsJs.getData()
+  items.getData()
 }}`,
       serverSidePagination: true,
       totalCount: `{{
@@ -417,7 +417,7 @@ white-space: nowrap;`,
           name: 'TextItemTitle',
           color: '#161A22',
           text: `{{
-  itemModalJs.currentItem ? \`Редагувати "\${itemModalJs.currentItem.name || ''}"\` : 'Створення значення'
+  itemModal.currentItem ? \`Редагувати "\${itemModal.currentItem.name || ''}"\` : 'Створення значення'
 }}`,
           variant: 'heading4-sb',
         }),
@@ -428,23 +428,23 @@ white-space: nowrap;`,
           text: 'Створення значення до словника',
           variant: 'body4-r',
           visible: `{{
-  !itemModalJs.currentItem
+  !itemModal.currentItem
 }}`,
         }),
         node('Input', {
           name: 'InputItemName',
           margin: '24px 0 0 ',
           defaultValid: `{{
-  itemModalJs.notBlank(InputItemName)
+  itemModal.notBlank(InputItemName)
 }}`,
           required: true,
           validationMessage: 'Обов\'язкове поле',
           marker: true,
           defaultValue: `{{
-  itemModalJs.currentItem?.name ?? ''
+  itemModal.currentItem?.name ?? ''
 }}`,
           disabled: `{{
-  itemModalJs.loading
+  itemModal.loading
 }}`,
           label: 'Назва',
           placeholder: 'name',
@@ -453,10 +453,10 @@ white-space: nowrap;`,
           name: 'InputItemCode',
           margin: '16px 0 0',
           defaultValue: `{{
-  itemModalJs.currentItem?.code ?? ''
+  itemModal.currentItem?.code ?? ''
 }}`,
           disabled: `{{
-  itemModalJs.loading
+  itemModal.loading
 }}`,
           label: 'Код',
           placeholder: 'dictionary.name',
@@ -467,10 +467,10 @@ white-space: nowrap;`,
           required: true,
           marker: true,
           defaultValue: `{{
-  itemModalJs.currentItem?.is_active === false ? 'inactive' : 'active'
+  itemModal.currentItem?.is_active === false ? 'inactive' : 'active'
 }}`,
           disabled: `{{
-  itemModalJs.loading
+  itemModal.loading
 }}`,
           label: 'Статус',
           options: `{{
@@ -481,10 +481,10 @@ white-space: nowrap;`,
           name: 'InputItemDescription',
           margin: '16px 0 0',
           defaultValue: `{{
-  itemModalJs.currentItem?.description ?? ''
+  itemModal.currentItem?.description ?? ''
 }}`,
           disabled: `{{
-  itemModalJs.loading
+  itemModal.loading
 }}`,
           label: 'Опис',
           placeholder: 'Enter a description...',
@@ -497,7 +497,7 @@ white-space: nowrap;`,
               name: 'ButtonItemCancel',
               widthMode: 'hug',
               onClick: `{{
-  itemModalJs.close()
+  itemModal.close()
 }}`,
               text: 'Скасувати',
               variant: 'outlined',
@@ -506,13 +506,13 @@ white-space: nowrap;`,
               name: 'ButtonItemSubmit',
               widthMode: 'hug',
               disabled: `{{
-  itemModalJs.getDisableSubmit() || itemModalJs.loading
+  itemModal.getDisableSubmit() || itemModal.loading
 }}`,
               onClick: `{{
-  itemModalJs.onSubmit()
+  itemModal.onSubmit()
 }}`,
               text: `{{
-  itemModalJs.currentItem ? 'Зберегти' : 'Створити'
+  itemModal.currentItem ? 'Зберегти' : 'Створити'
 }}`,
             }),
           ],
@@ -531,7 +531,7 @@ white-space: nowrap;`,
           name: 'TextDeleteItemTitle',
           color: '#161A22',
           text: `{{
-  \`Видалити значення "\${deleteItemJs.getLabel()}"?\`
+  \`Видалити значення "\${deleteItem.getLabel()}"?\`
 }}`,
           variant: 'heading4-sb',
         }),
@@ -540,7 +540,7 @@ white-space: nowrap;`,
           margin: '8px 0 0',
           color: '#858C99',
           text: `{{
-  deleteItemJs.getDescription()
+  deleteItem.getDescription()
 }}`,
           variant: 'body4-r',
         }),
@@ -551,7 +551,7 @@ white-space: nowrap;`,
               name: 'ButtonDeleteItemCancel',
               widthMode: 'hug',
               onClick: `{{
-  deleteItemJs.close()
+  deleteItem.close()
 }}`,
               text: 'Скасувати',
               variant: 'outlined',
@@ -561,10 +561,10 @@ white-space: nowrap;`,
               widthMode: 'hug',
               color: 'error',
               disabled: `{{
-  deleteItemJs.loading
+  deleteItem.loading
 }}`,
               onClick: `{{
-  deleteItemJs.onSubmit()
+  deleteItem.onSubmit()
 }}`,
               text: 'Видалити',
             }),
@@ -584,7 +584,7 @@ white-space: nowrap;`,
           name: 'TextEditDictTitle',
           color: '#161A22',
           text: `{{
-  \`Редагувати "\${dictionaryJs.getDictionary()?.name || ''}"\`
+  \`Редагувати "\${dictionary.getDictionary()?.name || ''}"\`
 }}`,
           variant: 'heading4-sb',
         }),
@@ -592,16 +592,16 @@ white-space: nowrap;`,
           name: 'InputEditDictName',
           margin: '24px 0 0 ',
           defaultValid: `{{
-  dictEditJs.notBlank(InputEditDictName)
+  dictEdit.notBlank(InputEditDictName)
 }}`,
           required: true,
           validationMessage: 'Обов\'язкове поле',
           marker: true,
           defaultValue: `{{
-  dictionaryJs.getDictionary()?.name ?? ''
+  dictionary.getDictionary()?.name ?? ''
 }}`,
           disabled: `{{
-  dictEditJs.loading
+  dictEdit.loading
 }}`,
           label: 'Назва',
           placeholder: '',
@@ -610,10 +610,10 @@ white-space: nowrap;`,
           name: 'InputEditDictCode',
           margin: '16px 0 0',
           defaultValue: `{{
-  dictionaryJs.getDictionary()?.code ?? ''
+  dictionary.getDictionary()?.code ?? ''
 }}`,
           disabled: `{{
-  dictEditJs.loading
+  dictEdit.loading
 }}`,
           label: 'Код',
           placeholder: '',
@@ -624,10 +624,10 @@ white-space: nowrap;`,
           required: true,
           marker: true,
           defaultValue: `{{
-  dictionaryJs.getDictionary()?.is_extensible ? 'yes' : 'no'
+  dictionary.getDictionary()?.is_extensible ? 'yes' : 'no'
 }}`,
           disabled: `{{
-  dictEditJs.loading
+  dictEdit.loading
 }}`,
           label: 'Дозволено додавати записи',
           options: `{{
@@ -638,10 +638,10 @@ white-space: nowrap;`,
           name: 'InputEditDictDescription',
           margin: '16px 0 0',
           defaultValue: `{{
-  dictionaryJs.getDictionary()?.description ?? ''
+  dictionary.getDictionary()?.description ?? ''
 }}`,
           disabled: `{{
-  dictEditJs.loading
+  dictEdit.loading
 }}`,
           label: 'Опис',
           placeholder: '',
@@ -654,7 +654,7 @@ white-space: nowrap;`,
               name: 'ButtonEditDictCancel',
               widthMode: 'hug',
               onClick: `{{
-  dictEditJs.close()
+  dictEdit.close()
 }}`,
               text: 'Скасувати',
               variant: 'outlined',
@@ -663,10 +663,10 @@ white-space: nowrap;`,
               name: 'ButtonEditDictSubmit',
               widthMode: 'hug',
               disabled: `{{
-  dictEditJs.getDisableSubmit() || dictEditJs.loading
+  dictEdit.getDisableSubmit() || dictEdit.loading
 }}`,
               onClick: `{{
-  dictEditJs.onSubmit()
+  dictEdit.onSubmit()
 }}`,
               text: 'Зберегти',
             }),
@@ -686,7 +686,7 @@ white-space: nowrap;`,
           name: 'TextDeleteDictTitle',
           color: '#161A22',
           text: `{{
-  \`Видалити словник "\${dictionaryJs.getDictionary()?.name || ''}"?\`
+  \`Видалити словник "\${dictionary.getDictionary()?.name || ''}"?\`
 }}`,
           variant: 'heading4-sb',
         }),
@@ -695,7 +695,7 @@ white-space: nowrap;`,
           margin: '8px 0 0',
           color: '#858C99',
           text: `{{
-  dictDeleteJs.getDescription()
+  dictDelete.getDescription()
 }}`,
           variant: 'body4-r',
         }),
@@ -706,7 +706,7 @@ white-space: nowrap;`,
               name: 'ButtonDeleteDictCancel',
               widthMode: 'hug',
               onClick: `{{
-  dictDeleteJs.close()
+  dictDelete.close()
 }}`,
               text: 'Скасувати',
               variant: 'outlined',
@@ -716,10 +716,10 @@ white-space: nowrap;`,
               widthMode: 'hug',
               color: 'error',
               disabled: `{{
-  dictDeleteJs.loading
+  dictDelete.loading
 }}`,
               onClick: `{{
-  dictDeleteJs.onSubmit()
+  dictDelete.onSubmit()
 }}`,
               text: 'Видалити',
             }),
@@ -779,8 +779,8 @@ white-space: nowrap;`,
   { runOnPageLoad: false, variables: `{
   "offset": {{ ((TableItems.page || 1) - 1) * (TableItems.pageSize || 15) }},
   "limit": {{ TableItems.pageSize || 15 }},
-  "order_by": {{ sortingJs.getOrderBy() }},
-  "where": {{ itemsJs.getWhere() }}
+  "order_by": {{ sorting.getOrderBy() }},
+  "where": {{ items.getWhere() }}
 }` }
 ),
     graphqlQuery(
@@ -865,5 +865,5 @@ white-space: nowrap;`,
 }}` }
 ),
   ],
-  scripts: [script('constantsJs', constantsJsCode), script('initJs', initJsCode), script('dictionaryJs', dictionaryJsCode), script('breadcrumbsJs', breadcrumbsJsCode), script('itemsJs', itemsJsCode), script('sortingJs', sortingJsCode), script('itemModalJs', itemModalJsCode), script('deleteItemJs', deleteItemJsCode), script('dictEditJs', dictEditJsCode), script('dictDeleteJs', dictDeleteJsCode), script('filterJs', filterJsCode)],
+  scripts: [script('constants', constantsCode), script('init', initCode), script('dictionary', dictionaryCode), script('breadcrumbs', breadcrumbsCode), script('items', itemsCode), script('sorting', sortingCode), script('itemModal', itemModalCode), script('deleteItem', deleteItemCode), script('dictEdit', dictEditCode), script('dictDelete', dictDeleteCode), script('filter', filterCode)],
 });

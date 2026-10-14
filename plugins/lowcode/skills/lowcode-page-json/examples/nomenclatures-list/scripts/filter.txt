@@ -57,7 +57,7 @@ return {
   onApply() {
     this.selectedFilters = this.getDraft();
 
-    tableJs.getData();
+    table.getData();
   },
 
   onClearCategory(id) {
@@ -80,7 +80,7 @@ return {
 
     this.selectedFilters = { names: [], manufacturers: [], countries: [] };
 
-    tableJs.getData();
+    table.getData();
   },
 
   isActive() {

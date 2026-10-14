@@ -14,11 +14,11 @@ return {
   },
 
   getSourceNode() {
-    return treeJs.findNode(treeJs.getNodes(this.sourceId), TreeSource.selectedId);
+    return tree.findNode(tree.getNodes(this.sourceId), TreeSource.selectedId);
   },
 
   getTargetNode() {
-    return treeJs.findNode(treeJs.getNodes(this.targetId), TreeTarget.selectedId);
+    return tree.findNode(tree.getNodes(this.targetId), TreeTarget.selectedId);
   },
 
   getTargetParentId() {
@@ -41,8 +41,8 @@ return {
     if (!source || !this.targetId) return [];
 
     const toKey = (name) => String(name ?? '').trim().toLowerCase();
-    const targetNames = new Set(treeJs.flatten(treeJs.getNodes(this.targetId)).map((node) => toKey(node.item.name)));
-    const names = treeJs
+    const targetNames = new Set(tree.flatten(tree.getNodes(this.targetId)).map((node) => toKey(node.item.name)));
+    const names = tree
       .flatten([source])
       .map((node) => node.item.name)
       .filter((name) => targetNames.has(toKey(name)));
@@ -89,7 +89,7 @@ return {
 
       TreeSource.reset();
 
-      const reloaded = await treeJs.reload({ notify: false });
+      const reloaded = await tree.reload({ notify: false });
 
       app.showAlert(
         reloaded ? 'Таксономії успішно об’єднано' : 'Таксономії об’єднано, але не вдалося оновити дерево',

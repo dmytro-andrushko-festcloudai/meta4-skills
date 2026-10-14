@@ -1,9 +1,9 @@
 import { graphqlQuery, node, page, script } from '../../scripts/builder';
-import constantsJsCode from './scripts/constantsJs.txt';
-import initJsCode from './scripts/initJs.txt';
-import breadcrumbsJsCode from './scripts/breadcrumbsJs.txt';
-import optionsJsCode from './scripts/optionsJs.txt';
-import formJsCode from './scripts/formJs.txt';
+import constantsCode from './scripts/constants.txt';
+import initCode from './scripts/init.txt';
+import breadcrumbsCode from './scripts/breadcrumbs.txt';
+import optionsCode from './scripts/options.txt';
+import formCode from './scripts/form.txt';
 
 export default page({
   content: [
@@ -11,13 +11,13 @@ export default page({
       name: 'BreadcrumbsForm',
       forwardDisabled: true,
       items: `{{
-  breadcrumbsJs.getBreadcrumbs()
+  breadcrumbs.getBreadcrumbs()
 }}`,
       onBack: `{{
-  breadcrumbsJs.onBack()
+  breadcrumbs.onBack()
 }}`,
       onNavigate: `{{
-  breadcrumbsJs.onNavigate(id)
+  breadcrumbs.onNavigate(id)
 }}`,
     }),
     node('Stack', {
@@ -27,7 +27,7 @@ export default page({
           name: 'TextTitle',
           verticalAlign: 'center',
           text: `{{
-  initJs.id ? 'Редагування товару' : 'Створення товару'
+  init.id ? 'Редагування товару' : 'Створення товару'
 }}`,
           variant: 'heading2-m',
         }),
@@ -36,13 +36,13 @@ export default page({
           verticalAlign: 'center',
           widthMode: 'hug',
           disabled: `{{
-  formJs.isSubmitDisabled() || formJs.isSubmitting
+  form.isSubmitDisabled() || form.isSubmitting
 }}`,
           onClick: `{{
-  formJs.onSubmit()
+  form.onSubmit()
 }}`,
           text: `{{
-  initJs.id ? 'Зберегти' : 'Створити товар'
+  init.id ? 'Зберегти' : 'Створити товар'
 }}`,
           size: 'lg',
         }),
@@ -84,7 +84,7 @@ export default page({
             node('Input', {
               name: 'InputSku',
               defaultValue: `{{
-  formJs.getItem()?.sku ?? ''
+  form.getItem()?.sku ?? ''
 }}`,
               description: 'Цей код автоматично генерується для цього продукту, щоб унікально ідентифікувати його в системі',
               label: 'SKU',
@@ -104,16 +104,16 @@ export default page({
             node('Input', {
               name: 'InputName',
               defaultValid: `{{
-  formJs.notBlank(InputName)
+  form.notBlank(InputName)
 }}`,
               required: true,
               validationMessage: 'Обов\'язкове поле',
               marker: true,
               defaultValue: `{{
-  formJs.getItem()?.name ?? ''
+  form.getItem()?.name ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Назва продукту',
               placeholder: 'Молоко ультрапастеризоване 2,5%',
@@ -132,10 +132,10 @@ export default page({
             node('Input', {
               name: 'InputManufacturer',
               defaultValue: `{{
-  formJs.getItem()?.manufacturer_name ?? ''
+  form.getItem()?.manufacturer_name ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Виробник',
               placeholder: 'Оберіть виробника',
@@ -154,10 +154,10 @@ export default page({
             node('Input', {
               name: 'InputCountry',
               defaultValue: `{{
-  formJs.getItem()?.country_of_origin ?? ''
+  form.getItem()?.country_of_origin ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Країна походження',
               placeholder: 'Введіть країну',
@@ -210,7 +210,7 @@ export default page({
             node('Input', {
               name: 'InputBarcode',
               defaultValue: `{{
-  formJs.getItem()?.barcode ?? ''
+  form.getItem()?.barcode ?? ''
 }}`,
               description: 'Цей код автоматично генерується для цього продукту, щоб унікально ідентифікувати його в системі',
               label: 'Штрих код',
@@ -232,14 +232,14 @@ export default page({
               required: true,
               marker: true,
               defaultValue: `{{
-  formJs.getItem()?.unit_of_measure_fcp_id ?? ''
+  form.getItem()?.unit_of_measure_fcp_id ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Одиниці виміру',
               options: `{{
-  optionsJs.getUnitOptions()
+  options.getUnitOptions()
 }}`,
               placeholder: 'Оберіть одиницю виміру',
             }),
@@ -257,10 +257,10 @@ export default page({
             node('Input', {
               name: 'InputShelfLife',
               defaultValue: `{{
-  formJs.getItem()?.shelf_life ?? ''
+  form.getItem()?.shelf_life ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Термін придатності',
               placeholder: '12 місяців',
@@ -268,10 +268,10 @@ export default page({
             node('Input', {
               name: 'InputTemperatureFrom',
               defaultValue: `{{
-  formJs.getItem()?.storing_temperature_from ?? ''
+  form.getItem()?.storing_temperature_from ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Температура зберігання від',
               placeholder: '0 (°C)',
@@ -279,10 +279,10 @@ export default page({
             node('Input', {
               name: 'InputTemperatureTo',
               defaultValue: `{{
-  formJs.getItem()?.storing_temperature_to ?? ''
+  form.getItem()?.storing_temperature_to ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Температура зберігання до',
               placeholder: '0 (°C)',
@@ -335,38 +335,38 @@ export default page({
             node('Select', {
               name: 'SelectUktzed',
               defaultValue: `{{
-  formJs.getItem()?.code_uktzed_fcp_id ?? ''
+  form.getItem()?.code_uktzed_fcp_id ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Код УКТЗЕД',
               options: `{{
-  optionsJs.getUktzedOptions()
+  options.getUktzedOptions()
 }}`,
               placeholder: '0401201100',
             }),
             node('Select', {
               name: 'SelectVatRate',
               defaultValue: `{{
-  formJs.getItem()?.vat_rate ?? ''
+  form.getItem()?.vat_rate ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Ставка ПДВ',
               options: `{{
-  optionsJs.getVatRateOptions()
+  options.getVatRateOptions()
 }}`,
               placeholder: 'Оберіть ставку ПДВ',
             }),
             node('Input', {
               name: 'InputVatRelief',
               defaultValue: `{{
-  formJs.getItem()?.vat_relief ?? ''
+  form.getItem()?.vat_relief ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Пільга по ПДВ',
               placeholder: 'Код або опис пільги',
@@ -382,10 +382,10 @@ export default page({
         node('Checkbox', {
           name: 'CheckboxExcise',
           defaultValue: `{{
-  Boolean(formJs.getItem()?.excise_applicable)
+  Boolean(form.getItem()?.excise_applicable)
 }}`,
           disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
           label: 'Акцизний товар',
         }),
@@ -429,10 +429,10 @@ export default page({
             node('Input', {
               name: 'InputKind',
               defaultValue: `{{
-  formJs.getItem()?.nomenclature_kind ?? ''
+  form.getItem()?.nomenclature_kind ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Вид номенклатури',
               placeholder: 'Введіть вид номенклатури',
@@ -440,10 +440,10 @@ export default page({
             node('Input', {
               name: 'InputPosKind',
               defaultValue: `{{
-  formJs.getItem()?.pos_nomenclature_kind ?? ''
+  form.getItem()?.pos_nomenclature_kind ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Вид номенклатури для ФКА',
               placeholder: 'Введіть вид номенклатури для ФКА',
@@ -451,10 +451,10 @@ export default page({
             node('Input', {
               name: 'InputFoodCost',
               defaultValue: `{{
-  formJs.getItem()?.food_cost_type ?? ''
+  form.getItem()?.food_cost_type ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Фудкост',
               placeholder: '35.50',
@@ -462,24 +462,24 @@ export default page({
             node('Select', {
               name: 'SelectType',
               defaultValue: `{{
-  formJs.getItem()?.nomenclature_type_fcp_id ?? ''
+  form.getItem()?.nomenclature_type_fcp_id ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Тип номенклатури',
               options: `{{
-  optionsJs.getTypeOptions()
+  options.getTypeOptions()
 }}`,
               placeholder: 'Оберіть тип номенклатури',
             }),
             node('Input', {
               name: 'InputManager',
               defaultValue: `{{
-  formJs.getItem()?.responsible_manager ?? ''
+  form.getItem()?.responsible_manager ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Відповідальний менеджер',
               placeholder: 'Оберіть менеджера',
@@ -495,10 +495,10 @@ export default page({
         node('Checkbox', {
           name: 'CheckboxOwnProduction',
           defaultValue: `{{
-  Boolean(formJs.getItem()?.own_production)
+  Boolean(form.getItem()?.own_production)
 }}`,
           disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
           label: 'Продукція власного виробництва',
         }),
@@ -542,14 +542,14 @@ export default page({
             node('Select', {
               name: 'SelectTaxBenefit',
               defaultValue: `{{
-  formJs.getItem()?.tax_benefit_code ?? ''
+  form.getItem()?.tax_benefit_code ?? ''
 }}`,
               disabled: `{{
-  formJs.isSubmitting
+  form.isSubmitting
 }}`,
               label: 'Код додаткової пільги',
               options: `{{
-  optionsJs.getTaxBenefitOptions()
+  options.getTaxBenefitOptions()
 }}`,
               placeholder: '101',
             }),
@@ -674,5 +674,5 @@ export default page({
 }}` }
 ),
   ],
-  scripts: [script('constantsJs', constantsJsCode), script('initJs', initJsCode), script('breadcrumbsJs', breadcrumbsJsCode), script('optionsJs', optionsJsCode), script('formJs', formJsCode)],
+  scripts: [script('constants', constantsCode), script('init', initCode), script('breadcrumbs', breadcrumbsCode), script('options', optionsCode), script('form', formCode)],
 });

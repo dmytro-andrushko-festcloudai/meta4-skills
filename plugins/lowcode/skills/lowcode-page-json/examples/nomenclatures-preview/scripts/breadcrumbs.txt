@@ -1,6 +1,6 @@
 return {
   getBreadcrumbs() {
-    const item = nomenclatureJs.getItem();
+    const item = nomenclature.getItem();
 
     return [
       { id: 'home', label: 'Товари' },
@@ -10,7 +10,7 @@ return {
 
   onNavigate(id) {
     if (id === 'home') {
-      navigationJs.goToList();
+      navigation.goToList();
     }
   },
 };

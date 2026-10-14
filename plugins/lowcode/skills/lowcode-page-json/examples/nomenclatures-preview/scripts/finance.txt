@@ -1,7 +1,7 @@
 return {
   getData() {
-    const item = nomenclatureJs.getItem() || {};
-    const { text } = nomenclatureJs;
+    const item = nomenclature.getItem() || {};
+    const { text } = nomenclature;
 
     return [
       { id: 'tax_benefit', label: 'Код додаткової пільги', value: text(item.tax_benefit_code) },

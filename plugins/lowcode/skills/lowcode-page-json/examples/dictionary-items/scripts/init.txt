@@ -15,7 +15,7 @@ async function fetchData() {
     return;
   }
 
-  await itemsJs.getData();
+  await items.getData();
 }
 
 fetchData();

@@ -42,7 +42,7 @@ return {
         is_extensible: RadioEditDictExtensible.value === 'yes',
       };
 
-      const { data, error } = await updateDictionary.run({ id: initJs.id, object });
+      const { data, error } = await updateDictionary.run({ id: init.id, object });
 
       if (error) throw new Error(error);
 
@@ -54,7 +54,7 @@ return {
 
       this.close();
 
-      await dictionaryJs.reload();
+      await dictionary.reload();
     } catch (error) {
       app.showAlert(error?.message || 'Не вдалося оновити словник', 'error');
     } finally {

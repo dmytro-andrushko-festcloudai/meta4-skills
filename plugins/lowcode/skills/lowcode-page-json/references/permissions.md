@@ -51,7 +51,7 @@ For each user action decide which kind it is, because the gate goes on the contr
 
 The current user's grants are already in `app.user.permissions`, and `app.hasPermission(requirements)` checks them. Prefer it over fetching `securityservice_person_effective_permissions_v_v1` again: it needs no query, no loading state and works in bindings.
 
-The agreed shape of `permissionsJs` is **one requirement array per capability and one method per capability, and nothing else**: no dispatcher taking an action name, no `ENTITY` constant, no per-entity accessor. Only define a capability the page actually gates on.
+The agreed shape of `permissions` is **one requirement array per capability and one method per capability, and nothing else**: no dispatcher taking an action name, no `ENTITY` constant, no per-entity accessor. Only define a capability the page actually gates on.
 
 ```js
 const EDIT_ROLE_REQUIREMENTS = ['role_edit', 'permission_edit'];
@@ -74,8 +74,8 @@ return {
 ```
 
 - A capability whose requirement depends on the row (`canRemoveRole(role)`: a role with a workgroup condition also needs `permission_admin`) takes the row as an argument; keep it a method of the same script.
-- Gate by binding. `visible: "{{ permissionsJs.canEditRole() }}"` for things that should not appear; combine with an existing condition as `{{ <existing> && permissionsJs.canEditRole() }}`. Use `disabled: "{{ !permissionsJs.canEditRole() }}"` only for things that should show but not act.
-- A row menu: `getRowActions(role)` returns the items filtered with `permissionsJs.canX()`, and the menu block's `visible` is `{{ tableJs.getRowActions(currentItem).length > 0 }}`.
+- Gate by binding. `visible: "{{ permissions.canEditRole() }}"` for things that should not appear; combine with an existing condition as `{{ <existing> && permissions.canEditRole() }}`. Use `disabled: "{{ !permissions.canEditRole() }}"` only for things that should show but not act.
+- A row menu: `getRowActions(role)` returns the items filtered with `permissions.canX()`, and the menu block's `visible` is `{{ table.getRowActions(currentItem).length > 0 }}`.
 - Give the script no comments. State the source of each requirement in the report.
 
 `examples/permissions.ts` shows an older variant that fetches `getPermissions` and denies until it returns, with a `can(action)` dispatcher. Use it only when `app.hasPermission` is not available, and prefer the shape above.

@@ -10,8 +10,8 @@ return {
   },
 
   getData() {
-    const item = nomenclatureJs.getItem() || {};
-    const { text, temperature } = nomenclatureJs;
+    const item = nomenclature.getItem() || {};
+    const { text, temperature } = nomenclature;
 
     return [
       { id: 'shelf_life', label: 'Термін придатності', value: text(item.shelf_life) },

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-import { compileFailure } from '../../../../apps/lowcode/src/engine/core/eval/compile';
+import { analyzeCode, compileFailure } from '../../../../apps/lowcode/src/engine/core/eval/compile';
 import { blocks, shapeOf } from '../../../../apps/lowcode/src/runtime/registry/blocks';
 import { shapeInfo, slotsOf } from '../../../../apps/lowcode/src/runtime/shape-info';
 
@@ -109,38 +109,50 @@ const defined = new Set<string>([
   ...referenced,
   ...(root.scripts ?? []).map((s: { name: string }) => s.name),
   ...(root.queries ?? []).map((q: { name: string }) => q.name),
+  ...(root.modules ?? []).map((m: { name: string }) => m.name),
 ]);
 const blockPrefix = new RegExp(`^(${Object.keys(blocks).join('|')})[A-Za-z0-9]*$`);
 const queryCall = /\b([A-Za-z_]\w*)\.(?:run|data|loading|error)\b/g;
-const scriptCall = /\b([A-Za-z_]\w*Js)\./g;
+// Names the engine provides to every expression and js file, besides the page's own blocks, queries and js files.
+const SCOPE_NAMES = new Set(['app', 'computed', 'currentIndex', 'currentItem', 'effect', 'inputs', 'params', 'signal']);
 const blockCall =
   /\b([A-Z]\w*)\.(?:value|values|setValue|setValues|reset|valid|dirty|page|pageSize|setPage|open|setOpen|selectedValue|setSelectedValue|selectedRow)\b/g;
 
-const checkReferences = (code: string, where: string) => {
+// `strict` is off for event handlers: their payload (`id`, `value`, ...) is a free name the page does not declare.
+const checkReferences = (code: string, where: string, mode: 'expression' | 'statement', strict = true) => {
   const flag = (pattern: RegExp, kind: string, accept: (name: string) => boolean) => {
     for (const match of code.matchAll(pattern)) {
       if (accept(match[1]) && !defined.has(match[1])) problems.push(`${where}: ${kind} "${match[1]}" is not defined on this page`);
     }
   };
 
-  flag(scriptCall, 'script', () => true);
+  if (strict) {
+    const analyzed = analyzeCode(code, mode, mode === 'statement' ? { async: false } : {});
+
+    if ('refs' in analyzed) {
+      for (const name of analyzed.refs) {
+        if (!SCOPE_NAMES.has(name) && !defined.has(name)) problems.push(`${where}: "${name}" is not defined on this page`);
+      }
+    }
+  }
+
   flag(queryCall, 'query', (name) => /^(get|create|update|delete|save|remove|fetch|load)[A-Z]/.test(name));
   flag(blockCall, 'block', (name) => blockPrefix.test(name));
 };
 
-const scan = (value: unknown, where: string) => {
+const scan = (value: unknown, where: string, key = '') => {
   if (typeof value === 'string' && value.includes('{{')) {
-    for (const match of value.matchAll(/\{\{([\s\S]*?)\}\}/g)) checkReferences(match[1], where);
+    for (const match of value.matchAll(/\{\{([\s\S]*?)\}\}/g)) checkReferences(match[1], where, 'expression', !/^on[A-Z]/.test(key));
   } else if (Array.isArray(value)) {
-    value.forEach((item) => scan(item, where));
+    value.forEach((item) => scan(item, where, key));
   } else if (value && typeof value === 'object') {
-    Object.values(value).forEach((item) => scan(item, where));
+    Object.entries(value).forEach(([name, item]) => scan(item, where, name));
   }
 };
 
 scan(data.content, 'content');
 
-for (const s of root.scripts ?? []) checkReferences(s.code, `script ${s.name}`);
+for (const s of root.scripts ?? []) checkReferences(s.code, `script ${s.name}`, 'statement');
 
 for (const q of root.queries ?? []) {
   for (const field of ['endpoint', 'headers', 'variables', 'url', 'body']) scan(q[field], `query ${q.name}.${field}`);
