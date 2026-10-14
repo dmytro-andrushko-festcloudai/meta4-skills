@@ -90,3 +90,9 @@ return {
 **Levels include each other in `app.hasPermission`:** `admin` satisfies `edit` and `view` on the same data component, `edit` satisfies `view`. So `['role_edit', 'permission_edit']` passes for a user with `role_admin` and `permission_admin`; do not add the admin names as alternatives.
 
 **If every gated control is hidden for a user who has the permissions,** the page is running without a user: `app.hasPermission` falls back to the engine's empty host. Pages rendered as shell workspace pages go through `LowCodePage` → `PageViewer`, which must pass and wrap `user` (`UserProvider`) the same way `LowCode.tsx` → `App` does. The console's `Unknown Event type: webpackOk` lines come from the React DevTools extension and are unrelated.
+
+## Rules for actions
+
+### Gate actions on the record's status in every place they appear
+
+"Assign to employee" is valid only for published roles: hide the drawer button with `visible: "{{ table.isActive(drawer.role?.status) }}"`, drop it from the row menu in the same script that builds the menu items, and return early in the script method that opens the flow.

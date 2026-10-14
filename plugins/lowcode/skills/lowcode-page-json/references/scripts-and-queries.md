@@ -9,6 +9,7 @@ How to name, group and order the js files (`scripts`) and `queries` of a page. T
 - **Blocks stay PascalCase** (`TableRoles`, `ModalDelete`), so a lower-case js file name never collides with a block name.
 - **Names are one namespace for the whole page.** Blocks, queries and js files share it, and the engine reserves some words (`app`, `params`, `inputs`, `currentItem`, `currentIndex`, `parent`, `self`, `top`, the JS globals and keywords). `validateName` in the editor and `tool.mjs validate` report a clash. `filter`, `table` and `drawer` are fine, `top` and `self` are not.
 - **A js file must not declare a local with the name of another js file** (`const filter = ...` inside `table` hides the `filter` js file there). Rename the local.
+- **Name blocks you reference from scripts.** The builder numbers blocks `Input1`, `Input2`, ...; set `block.props.name = 'InputName'` right after `node()` for anything a script reads (`InputName.value`, `ModalForm.setOpen(true)`), because renumbering would break the script.
 
 ## Folders
 
@@ -19,7 +20,7 @@ Group by the area of the screen, not by the kind of code:
 | Folder | What goes in it |
 |---|---|
 | `core` | `init`, `constants`, `permissions`: what every other area reads |
-| `localization` | `translations` (the nested dictionaries) and `i18n` (`init()` and `t`), see gotcha 42 in `blocks-and-layout.md` |
+| `localization` | `translations` (the nested dictionaries) and `i18n` (`init()` and `t`), see `references/blocks/localization.md` |
 | one folder per feature area, named after it: `table`, `filter`, `drawer`, `access`, `form`, ... | the js files of that area and the queries they call |
 
 Rules:

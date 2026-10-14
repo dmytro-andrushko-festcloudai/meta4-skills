@@ -57,7 +57,7 @@ const rightPadding = (padding: string): number => {
   return Number.parseFloat(right ?? '') || 0;
 };
 
-// A Modal keeps its header and actions fixed and scrolls only the fields, gotcha 36 in blocks-and-layout.md.
+// A Modal keeps its header and actions fixed and scrolls only the fields, references/blocks/overlays.md.
 const checkModal = (n: PageNode, where: string) => {
   const { height, maxHeight } = n.props;
   const inner = collectNodes(n.props.children);
@@ -93,7 +93,7 @@ const checkModal = (n: PageNode, where: string) => {
   }
 };
 
-// Every tab's content is one Stack with padding, so it never sits flush under the tab strip (gotcha 10).
+// Every tab's content is one Stack with padding, so it never sits flush under the tab strip (references/blocks/tabs.md).
 const checkTabs = (n: PageNode, where: string) => {
   const tabs = Array.isArray(n.props.tabs) ? (n.props.tabs as Array<{ content?: PageNode[]; label?: string }>) : [];
 

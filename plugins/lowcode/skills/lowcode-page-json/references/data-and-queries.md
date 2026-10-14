@@ -149,3 +149,17 @@ When the API is not ready, put the data in a script and bind to it exactly as if
 - Some schemas are permission-denied when queried directly (for example `permission denied for schema ui_artifact_v0`); reach that data through a relation from an allowed table. When a query fails with permission errors, ask for a working query instead of guessing.
 - Relation field names are generated (`<child_table>_<fk_column>_array`, `<parent>_<fk>_<table>`); copy them, do not derive them.
 - **Ids are `String`, not `uuid`.** `fcp_id` and the other id columns are typed `String` in this Hasura, so declare query variables as `$id: String!` even though the values look like UUIDs. `uuid!` fails with a variable type mismatch.
+
+## Data rules found on real pages
+
+### Check enum values against a real response before mapping them
+
+Hasura returned `status: "PUBLISHED"`, not the `publish` a design label suggested. Map case-insensitively in the script and send the real value in `_in` filters. Audit columns such as `audit_updated_by` can be `null`; render a dash, and do not build lookups from null ids.
+
+### Never paste `x-hasura-admin-secret` into page JSON
+
+Page JSON ships to every browser. Headers are `Authorization: Bearer ${app.token}` only; if a table is not readable, fix the Hasura permission.
+
+### Script state and mock lists
+
+a script can keep state on itself (`this.items = [...]`, `this.mode = 'edit'`) and bindings re-render. A mock CRUD page keeps `items` in the script, derives rows in one `getRows()` (search, filters, sort, then map to display fields) and mutates `this.items` in `save()` and `confirmDelete()`. Fill a modal form by calling `Input.setValue(...)` and `RadioGroup.setValue(...)` before `Modal.setOpen(true)`.
