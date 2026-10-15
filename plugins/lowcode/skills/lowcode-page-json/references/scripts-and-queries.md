@@ -4,7 +4,7 @@ How to name, group and order the js files (`scripts`) and `queries` of a page. T
 
 ## Names
 
-- **Js files: the role, camelCase.** `table`, `filter`, `sorting`, `drawer`, `access`, `permissions`, `constants`, `init`, `i18n`, `translations`. A js file owns one area of the page, so its name is the area.
+- **Js files: the role, camelCase.** `table`, `filter`, `sorting`, `drawer`, `access`, `permissions`, `constants`, `init`, `localeUk`, `localeEn`. A js file owns one area of the page, so its name is the area. Some existing pages suffix every js file with `Js` (`tableJs`, `localeUkJs`, the dictionaries pages); when you edit such a page, keep its suffix rather than mixing both styles.
 - **Queries: verb plus entity.** `getRoles`, `getRolePermissions`, `createRole`, `updateRole`, `deleteDraftRole`, `assignRole`, `upsertPersonConditionValues`. Read queries start with `get`, writes with `create`, `update`, `delete`, `assign`, `upsert`. A REST call follows the same rule (`activateRole`).
 - **Blocks stay PascalCase** (`TableRoles`, `ModalDelete`), so a lower-case js file name never collides with a block name.
 - **Names are one namespace for the whole page.** Blocks, queries and js files share it, and the engine reserves some words (`app`, `params`, `inputs`, `currentItem`, `currentIndex`, `parent`, `self`, `top`, the JS globals and keywords). `validateName` in the editor and `tool.mjs validate` report a clash. `filter`, `table` and `drawer` are fine, `top` and `self` are not.
@@ -15,30 +15,57 @@ How to name, group and order the js files (`scripts`) and `queries` of a page. T
 
 `root.props.folders` is a flat list of `{ id, name }`. Folders do not nest. Every js file and every query carries a `folderId`; never leave one at the root of a page that uses folders.
 
-Group by the area of the screen, not by the kind of code:
+**Folder names are camelCase**: one word lower case (`core`, `table`, `localization`), several words camelCase (`dictionariesTable`, `itemForm`, `deleteDictionary`). No spaces, no capitals at the start, no kebab-case.
+
+Group by domain, the area of the screen, not by the kind of code. Never make a `scripts` folder and a `queries` folder:
 
 | Folder | What goes in it |
 |---|---|
 | `core` | `init`, `constants`, `permissions`: what every other area reads |
-| `localization` | `translations` (the nested dictionaries) and `i18n` (`init()` and `t`), see `references/blocks/localization.md` |
-| one folder per feature area, named after it: `table`, `filter`, `drawer`, `access`, `form`, ... | the js files of that area and the queries they call |
+| `localization` | exactly the language js files, `localeUk` and `localeEn`, nothing else; see `references/blocks/localization.md` |
+| one folder per feature area, named after it: `table`, `filter`, `drawer`, `access`, `itemForm`, `deleteItem`, ... | the js files of that area and the queries they call |
 
 Rules:
 
 1. **A query lives with the area that owns the data it loads.** `getRoles` and `activateRole` belong to the table, `getAuthorPrincipals` to the filter that offers authors, `getRolePermissions` and the delete queries to the drawer.
 2. **A query used by two or more areas goes to `core`.** Move it there when the second caller appears, not before.
-3. **A modal or drawer is an area.** Its js file (`drawer`, `access`) and the queries it fires sit in one folder, named after the panel.
+3. **A modal or drawer is an area.** Its js file (`drawer`, `access`, `deleteModal`) and the queries it fires sit in one folder, named after the panel: the delete-confirm modal script with the delete mutations in `deleteDictionary`, the create/edit form script with the create and update mutations in `dictionaryForm`.
 4. **Small helpers stay in the js file that uses them.** Add a js file only for a new area or when one grows past one job (roughly 300 lines or two kinds of work, for example state of a panel and loading its list).
 5. **A one-view page can have two folders** (`core`, then the area) and a trivial page none. Folders exist to find things, do not add them to a page with five scripts.
 
-Order in the arrays (the editor shows them in this order): `core`, `localization`, then the feature areas in the order they appear on the screen, top to bottom. Inside an area, scripts before queries.
+Order in the arrays (the editor shows them in this order): `localization`, `core`, then the feature areas in the order they appear on the screen, top to bottom. Inside an area, scripts before queries.
 
 ## How js files talk to each other
 
-- Reach another js file by its name: `table.getData()`, `permissions.canEditRole()`, `i18n.t('roles.title')`.
-- `init` is the entry point: it calls `i18n.init()` first, then loads the page data. Nothing else runs on page load except queries with `runOnPageLoad`.
-- `constants` holds endpoints and fixed lists. Labels that are shown to the user are keys in `translations`, never literals in `constants` (a constant is built once and would stay in the first language).
+- Reach another js file by its name: `table.getData()`, `permissions.canEditRole()`; translations through `app.libraries.i18n.t('roles.title')`.
+- `init` is the entry point: its first line registers the dictionaries (`app.libraries.i18n.init({ uk: localeUk, en: localeEn });`), then it loads the page data. Nothing else runs on page load except queries with `runOnPageLoad`.
+- `constants` holds endpoints and fixed lists. Labels that are shown to the user are keys in the locale js files, never literals in `constants` (a constant is built once and would stay in the first language).
 - Avoid cycles at load time: a js file that calls another one at its top level needs that one to exist and not call back.
+
+## Worked example (the dictionaries pages)
+
+`apps/lowcode/src/pages/dictionaries/schemas/` (these pages use the `Js` suffix):
+
+| Folder (list.json) | Scripts | Queries |
+|---|---|---|
+| `localization` | `localeUkJs`, `localeEnJs` | |
+| `common` | `constantsJs`, `permissionsJs`, `initJs` | |
+| `dictionariesTable` | `tableJs`, `sortingJs`, `filterJs` | `getDictionaries` |
+| `dictionaryForm` | `dictModalJs` | `createDictionary`, `updateDictionary` |
+| `deleteDictionary` | `deleteModalJs` | `deleteDictionaryItems`, `deleteDictionary` |
+
+| Folder (items.json) | Scripts | Queries |
+|---|---|---|
+| `localization` | `localeUkJs`, `localeEnJs` | |
+| `common` | `constantsJs`, `permissionsJs`, `initJs` | |
+| `dictionary` | `dictionaryJs`, `breadcrumbsJs` | `getDictionary` |
+| `itemsTable` | `itemsJs`, `sortingJs`, `filterJs` | `getDictionaryItems` |
+| `itemForm` | `itemModalJs` | `createDictionaryItem`, `updateDictionaryItem` |
+| `deleteItem` | `deleteItemJs` | `deleteDictionaryItem` |
+| `editDictionary` | `dictEditJs` | `updateDictionary` |
+| `deleteDictionary` | `dictDeleteJs` | `deleteDictionaryItems`, `deleteDictionary` |
+
+They name the shared folder `common`; new pages use `core`.
 
 ## Builder
 
@@ -54,7 +81,7 @@ graphqlQuery('getRoles', query, { folder: 'table' });
 | Folder | Scripts | Queries |
 |---|---|---|
 | `core` | `init`, `constants`, `permissions` | |
-| `localization` | `translations`, `i18n` | |
+| `localization` | `localeUk`, `localeEn` | |
 | `table` | `table`, `sorting` | `getRoles`, `getEmployeesByIds`, `activateRole` |
 | `filter` | `filter` | `getAuthorPrincipals` |
 | `drawer` | `drawer` | `getRolePermissions`, `deleteDraftRole`, `deletePublishedRole` |

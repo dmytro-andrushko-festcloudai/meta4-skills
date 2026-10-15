@@ -1,6 +1,6 @@
 # Localization
 
-Translations with `app.libraries.i18n`. Reference implementation: the security-service pages as they were localised on `feat/people-pages-v2` (commit `5e924080c`: `security-roles.json`, `role-form.json`, `access.json`). The pages on other branches may be inline Ukrainian again, so read that commit with `git show 5e924080c:apps/lowcode/src/pages/security-service/schemas/<page>.json`.
+Translations with `app.libraries.i18n`. Reference implementation: the dictionaries pages (`apps/lowcode/src/pages/dictionaries/schemas/list.json` and `items.json`). An older layout (a `translations` script plus an `i18n` wrapper, security-service pages at commit `5e924080c`) is superseded by the one below; convert it when you touch such a page.
 
 ## Ask first
 
@@ -19,63 +19,67 @@ The language is `app.user.locale` (`'en'` or `'uk'`). Dates: `app.libraries.dayj
 
 ## Scripts
 
-Two scripts in the `localization` group, right after `core` (see `references/scripts-and-queries.md`):
+A `localization` folder holds exactly two js files, one per language, and nothing else (see `references/scripts-and-queries.md`):
 
-- `translations` returns the nested dictionaries, one tree per language, with the same keys in `en` and `uk`.
-- `i18n` flattens them to dotted keys and exposes `init()` and `t`. Use this verbatim:
+- `localeUk` returns the Ukrainian dictionary.
+- `localeEn` returns the English dictionary, with the same keys.
+
+Each one only returns a flat object; no logic, no `init` call:
 
 ```js
-const flatten = (tree, prefix = '') =>
-  Object.entries(tree).reduce(
-    (out, [key, value]) =>
-      typeof value === 'object' ? { ...out, ...flatten(value, prefix + key + '.') } : { ...out, [prefix + key]: value },
-    {}
-  );
-
 return {
-  init() {
-    const flat = Object.fromEntries(Object.entries(translations).map(([locale, tree]) => [locale, flatten(tree)]));
-
-    app.libraries.i18n.init(flat);
-  },
-
-  t: (key, vars) => app.libraries.i18n.t(key, vars),
+  registryTitle: 'Реєстр Словників',
+  search: 'Пошук',
+  editNamed: 'Редагувати "{name}"',
+  itemsCount_one: '{count} значення',
+  itemsCount_few: '{count} значення',
+  itemsCount_many: '{count} значень',
+  itemsCount_other: '{count} значення',
 };
 ```
 
-The `init` script calls `i18n.init();` before the first load (`i18n.init(); fetchData(); return {};`). Bindings and scripts then call `i18n.t('key')` and re-render when `init` runs.
+The `init` js file registers both on its first line, before it loads any data:
+
+```js
+app.libraries.i18n.init({ uk: localeUk, en: localeEn });
+```
+
+Scripts and bindings call `app.libraries.i18n.t('key')` directly; there is no wrapper js file. A binding that runs before `init` shows the key for a moment and re-renders when `init` sets the dictionaries, because `t` reads a signal.
+
+On a page whose js files carry the `Js` suffix the files are `localeUkJs` and `localeEnJs` and the call is `app.libraries.i18n.init({ uk: localeUkJs, en: localeEnJs })`.
 
 ## Key layout
 
-Group the tree by page area, with a shared `common` group first:
+`init` takes flat dictionaries, so the locale files are flat objects:
 
-- `common`: words reused everywhere (`search`, `cancel`, `close`, `delete`, `edit`, `status`, `author`, `activate`, `filter`, `sorting`, `from`, `to`, `datePlaceholder`, `dateMask`, `somethingWentWrong`, `sortNameAsc`, `sortNameDesc`).
-- One group per page (`roles`, `roleForm`, `access`) with nested groups such as `tab`, `table`, `filter`, `sort`, `status`, `period`, `confirm`, `alert`.
-- Sentences with data use placeholders, never concatenation: `"deleteTitle": "Delete the role “{name}”?"`, called as `i18n.t('roles.confirm.deleteTitle', { name: drawer.role?.name || '' })`.
-- Reuse `common.*` before adding a page key. The same word in two groups means one of them belongs in `common`.
+- Plain camelCase keys are enough for one page (`search`, `cancel`, `createDictionary`, `deleteDictionaryTitle`). For a page with many areas, dotted keys group them (`'common.search'`, `'roles.confirm.deleteTitle'`); quote them in the object literal.
+- Shared words first (`search`, `cancel`, `save`, `create`, `edit`, `delete`, `name`, `code`, `description`, `status`, `filter`, `sorting`, `yes`, `no`, `requiredField`, `loading`), then the page's own keys in screen order.
+- Sentences with data use placeholders, never concatenation: `deleteDictionaryTitle: 'Видалити словник "{name}"?'`, called as `app.libraries.i18n.t('deleteDictionaryTitle', { name: dictionary?.name || '' })`.
+- Plurals are separate leaves selected by `count`: Ukrainian needs `_one`, `_few`, `_many`, `_other`; English `_one`, `_other`. Call `t('itemsCount', { count })`. This replaces hand-written plural rules.
+- Reuse a shared key before adding a page key.
 
 ## What to translate and how
 
-- **Everything the user reads**: block text, table headers, tab and segmented-control labels, menu items, placeholders, empty states, confirm title and body, breadcrumbs, `app.showAlert(...)` messages, thrown `new Error('…')` messages that reach an alert, and the fallback `error?.message || i18n.t('common.somethingWentWrong')`.
+- **Everything the user reads**: block text, table headers, tab and segmented-control labels, menu items, placeholders, empty states, confirm title and body, breadcrumbs, `app.showAlert(...)` messages, thrown `new Error('…')` messages that reach an alert, and the fallback `error?.message || app.libraries.i18n.t('somethingWentWrong')`.
 - **Constants hold keys, not labels.** A constant evaluated at load is fixed to the language at load time. Store `labelKey` and resolve where used:
 
 ```js
 const STATUSES = [
-  { value: 'PUBLISHED', labelKey: 'roles.filter.statusActive' },
-  { value: 'DRAFT', labelKey: 'roles.status.draft' },
+  { value: 'PUBLISHED', labelKey: 'statusActive' },
+  { value: 'DRAFT', labelKey: 'statusDraft' },
 ];
 
-const labelled = (items) => items.map((item) => ({ ...item, label: i18n.t(item.labelKey) }));
+const labelled = (items) => items.map((item) => ({ ...item, label: app.libraries.i18n.t(item.labelKey) }));
 ```
 
-- **Option and menu arrays in bindings** call `i18n.t` inline: `{{ [{ label: i18n.t('roles.tab.all'), value: 'all' }, { label: i18n.t('roles.tab.mine'), value: 'mine' }] }}`. Keep `value` language-neutral; only `label` is translated.
+- **Option and menu arrays** are built when used, never stored at load: in a binding call `t` inline (`{{ [{ value: 'yes', label: app.libraries.i18n.t('yes') }, { value: 'no', label: app.libraries.i18n.t('no') }] }}`), in a js file return them from a function (`getOptions() { return [...] }`, not an `options: [...]` property). Keep `value` language-neutral; only `label` is translated.
 - **Dates follow the language**: `app.user.locale === 'en' ? 'en-GB' : 'uk-UA'` for `toLocaleDateString`. A date mask or placeholder is a translation (`common.dateMask`: `dd.mm.yyyy` / `дд.мм.рррр`).
 - **Do not translate data**: names from Hasura, ids, statuses sent to the API, enum values, query text.
 - **Language-specific data stays per language**: an alphabet filter keeps a Latin and a Cyrillic list and picks one by `app.user.locale`.
 
 ## Checks
 
-- `en` and `uk` have identical key sets. A missing key renders as the key itself.
-- No Ukrainian or English literal is left in a block `text`, `label`, `placeholder` or `title`, or in an `app.showAlert` call.
-- Every `labelKey` and every `i18n.t('…')` key exists in `translations`.
-- The `i18n` and `translations` scripts are in the `localization` group, and `init` calls `i18n.init()` before anything renders data.
+- `localeUk` and `localeEn` have identical key sets (plural forms aside). A missing key renders as the key itself.
+- No Ukrainian or English literal is left in a block `text`, `label`, `placeholder`, `title` or `validationMessage`, in a table column `title`, or in an `app.showAlert` / `new Error` message.
+- Every `labelKey` and every `t('…')` key exists in both locale files.
+- The `localization` folder holds only the two locale files, and `init` calls `app.libraries.i18n.init(...)` on its first line.
