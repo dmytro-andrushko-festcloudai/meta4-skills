@@ -11,14 +11,16 @@ A lowcode **app** is a folder of such pages (list, form, preview, ...) behind on
 
 ## 0. Ask before implementing (a gate, not a suggestion)
 
-Before reading a design, planning views or writing any JSON, send the user **one message** with the questions below that the request has not already answered. Wait for the answers; do not assume a default, and do not start work that depends on an open question. When the user already said it (for example "take the dictionaries page" answers localization), state your reading of it in one line and move on.
+Before reading a design, planning views or writing any JSON, ask the user the questions below that the request has not already answered. Wait for the answers; do not assume a default, and do not start work that depends on an open question. When the user already said it (for example "take the dictionaries page" answers localization), state your reading of it in one line and move on.
 
-1. **Localization:** "Localise the page (en/uk via `app.libraries.i18n`) or inline Ukrainian text?" (`references/blocks/localization.md`)
-2. **Permissions:** "Gate create, edit and delete with permissions? If yes, which data component and level for each action, or should I read them from Hasura?" Requirements are a data component plus a level (`uom_view`, `uom_edit`, `uom_admin`), checked with `app.hasPermission`, or follow the permission query pattern in `references/permissions.md`; ask which one the page uses. Do not derive component names from table names.
-3. **Data source:** "Which Hasura table or query feeds the page?" Take the exact table or root field name from the user (for example `oms_uom_v0_units_of_measure`), or ask permission to look it up. Never guess one from a similar page. If the data is expected to move to another service later, ask, and keep the query text in one place.
-4. **Hasura access:** "Can you share the Hasura URL and an admin secret for dev (read-only use)?" It is needed to confirm tables, columns and types, read the data-component names, and read the per-table write rules. Say what you will read and why, as in the Rules below. If the user declines, fall back to a sample response and ask for the component names.
+**Ask with the `AskUserQuestion` tool, not a prose list.** Send one call with up to four questions, each a short single-select (radio) question with 2-4 concrete options. The recommended option goes first and is labelled "(Recommended)". The tool adds an "Other" free-text choice itself, so never add one. Use free text through "Other" for anything that cannot be an option (a table name, a URL). Keep each question to one decision and each description to one line.
 
-Ask them together, with a recommended answer for each, and only the ones still open.
+1. **Localization** (`Localise` / `Inline Ukrainian`): "Localise the page (en/uk via `app.libraries.i18n`) or inline Ukrainian text?" (`references/blocks/localization.md`)
+2. **Permissions** (`Gate, I give the names` / `Gate, read them from Hasura` / `No gate`): requirements are a data component plus a level (`uom_view`, `uom_edit`, `uom_admin`), checked with `app.hasPermission`, or follow the permission query pattern in `references/permissions.md`. Do not derive component names from table names; names typed in "Other" are taken as given.
+3. **Data source** (options only when you can name candidates, otherwise just "Other"): "Which Hasura table or query feeds the page?" Take the exact table or root field name from the user (for example `oms_uom_v0_units_of_measure`). Never guess one from a similar page. If the data is expected to move to another service later, ask, and keep the query text in one place.
+4. **Hasura access** (`Share URL and secret` / `Reuse the URL already in the repo` / `Decline, use a sample`): needed to confirm tables, columns and types, read the data-component names, and read the per-table write rules. The URL and the admin secret arrive through "Other" free text. Say what you will read and why, as in the Rules below. If the user declines, fall back to a sample response and ask for the component names.
+
+Ask only the ones still open. A reply that answers several at once (a table, a URL and a secret in one message) counts as answered; do not ask again.
 
 ## 1. Gather inputs (ask only for what is missing)
 
