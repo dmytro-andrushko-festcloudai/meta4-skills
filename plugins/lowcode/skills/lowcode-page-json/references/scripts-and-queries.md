@@ -4,7 +4,7 @@ How to name, group and order the js files (`scripts`) and `queries` of a page. T
 
 ## Names
 
-- **Js files: the role, camelCase.** `table`, `filter`, `sorting`, `drawer`, `access`, `permissions`, `constants`, `init`, `localeUk`, `localeEn`. A js file owns one area of the page, so its name is the area. Some existing pages suffix every js file with `Js` (`tableJs`, `localeUkJs`, the dictionaries pages); when you edit such a page, keep its suffix rather than mixing both styles.
+- **Js files: the role, camelCase.** `table`, `filter`, `sorting`, `drawer`, `access`, `permissions`, `constants`, `init`, `localeUk`, `localeEn`, `i18n`. A js file owns one area of the page, so its name is the area. **No `Js` suffix**: some older pages suffix every js file (`tableJs`, `localeUkJs`, the dictionaries pages); when you edit such a page, drop the suffix from all its js files in one pass ("Renaming a js file or a query" below), never mix both styles on one page.
 - **Queries: verb plus entity.** `getRoles`, `getRolePermissions`, `createRole`, `updateRole`, `deleteDraftRole`, `assignRole`, `upsertPersonConditionValues`. Read queries start with `get`, writes with `create`, `update`, `delete`, `assign`, `upsert`. A REST call follows the same rule (`activateRole`).
 - **Blocks stay PascalCase** (`TableRoles`, `ModalDelete`), so a lower-case js file name never collides with a block name.
 - **Names are one namespace for the whole page.** Blocks, queries and js files share it, and the engine reserves some words (`app`, `params`, `inputs`, `currentItem`, `currentIndex`, `parent`, `self`, `top`, the JS globals and keywords). `validateName` in the editor and `tool.mjs validate` report a clash. `filter`, `table` and `drawer` are fine, `top` and `self` are not.
@@ -22,7 +22,7 @@ Group by domain, the area of the screen, not by the kind of code. Never make a `
 | Folder | What goes in it |
 |---|---|
 | `core` | `init`, `constants`, `permissions`: what every other area reads |
-| `localization` | exactly the language js files, `localeUk` and `localeEn`, nothing else; see `references/blocks/localization.md` |
+| `localization` | exactly `localeUk`, `localeEn` and the `i18n` wrapper, nothing else; see `references/blocks/localization.md` |
 | one folder per feature area, named after it: `table`, `filter`, `drawer`, `access`, `itemForm`, `deleteItem`, ... | the js files of that area and the queries they call |
 
 Rules:
@@ -37,35 +37,34 @@ Order in the arrays (the editor shows them in this order): `localization`, `core
 
 ## How js files talk to each other
 
-- Reach another js file by its name: `table.getData()`, `permissions.canEditRole()`; translations through `app.libraries.i18n.t('roles.title')`.
-- `init` is the entry point: its first line registers the dictionaries (`app.libraries.i18n.init({ uk: localeUk, en: localeEn });`), then it loads the page data. Nothing else runs on page load except queries with `runOnPageLoad`.
+- Reach another js file by its name: `table.getData()`, `permissions.canEditRole()`; translations through `i18n.t('roles.title')`.
+- `i18n` registers the dictionaries when the page loads; `init` is the entry point that loads the page data. Nothing else runs on page load except queries with `runOnPageLoad`.
 - `constants` holds endpoints and fixed lists. Labels that are shown to the user are keys in the locale js files, never literals in `constants` (a constant is built once and would stay in the first language).
 - Avoid cycles at load time: a js file that calls another one at its top level needs that one to exist and not call back.
 
-## Worked example (the dictionaries pages)
+## Worked example (the taxonomies pages)
 
-`apps/lowcode/src/pages/dictionaries/schemas/` (these pages use the `Js` suffix):
+`apps/lowcode/src/pages/taxonomies/schemas/`:
 
 | Folder (list.json) | Scripts | Queries |
 |---|---|---|
-| `localization` | `localeUkJs`, `localeEnJs` | |
-| `common` | `constantsJs`, `permissionsJs`, `initJs` | |
-| `dictionariesTable` | `tableJs`, `sortingJs`, `filterJs` | `getDictionaries` |
-| `dictionaryForm` | `dictModalJs` | `createDictionary`, `updateDictionary` |
-| `deleteDictionary` | `deleteModalJs` | `deleteDictionaryItems`, `deleteDictionary` |
+| `localization` | `localeUk`, `localeEn`, `i18n` | |
+| `core` | `constants`, `permissions`, `init` | |
+| `tree` | `tree` | `getTaxonomies` |
+| `filter` | `filters` | |
+| `drawer` | `drawer` | |
+| `createForm` | `createModal` | `createTaxonomy` |
+| `editForm` | `editModal` | `updateTaxonomy` |
 
-| Folder (items.json) | Scripts | Queries |
+| Folder (merge.json) | Scripts | Queries |
 |---|---|---|
-| `localization` | `localeUkJs`, `localeEnJs` | |
-| `common` | `constantsJs`, `permissionsJs`, `initJs` | |
-| `dictionary` | `dictionaryJs`, `breadcrumbsJs` | `getDictionary` |
-| `itemsTable` | `itemsJs`, `sortingJs`, `filterJs` | `getDictionaryItems` |
-| `itemForm` | `itemModalJs` | `createDictionaryItem`, `updateDictionaryItem` |
-| `deleteItem` | `deleteItemJs` | `deleteDictionaryItem` |
-| `editDictionary` | `dictEditJs` | `updateDictionary` |
-| `deleteDictionary` | `dictDeleteJs` | `deleteDictionaryItems`, `deleteDictionary` |
+| `localization` | `localeUk`, `localeEn`, `i18n` | |
+| `core` | `constants`, `permissions`, `init` | |
+| `header` | `breadcrumbs` | |
+| `tree` | `tree` | `getTaxonomies` |
+| `merge` | `merge`, `preview` | `mergeTaxonomy` |
 
-They name the shared folder `common`; new pages use `core`.
+The dictionaries pages still use the older layout (`Js` suffix, a `common` folder, flat locale files); convert them when you touch them.
 
 ## Builder
 
@@ -80,8 +79,8 @@ graphqlQuery('getRoles', query, { folder: 'table' });
 
 | Folder | Scripts | Queries |
 |---|---|---|
+| `localization` | `localeUk`, `localeEn`, `i18n` | |
 | `core` | `init`, `constants`, `permissions` | |
-| `localization` | `localeUk`, `localeEn` | |
 | `table` | `table`, `sorting` | `getRoles`, `getEmployeesByIds`, `activateRole` |
 | `filter` | `filter` | `getAuthorPrincipals` |
 | `drawer` | `drawer` | `getRolePermissions`, `deleteDraftRole`, `deletePublishedRole` |
@@ -91,7 +90,7 @@ graphqlQuery('getRoles', query, { folder: 'table' });
 
 Do it in one pass and validate after:
 
-1. Replace the name in every string of the page JSON: bindings, event handlers, other js files, query variables and headers. A reference is the name not preceded by a letter, digit, `_`, `$` or `.`. A spread (`...filter.getWhere()`) ends in dots, so a "not preceded by `.`" rule misses it; handle it explicitly.
+1. Replace the name in every string of the page JSON: bindings, event handlers, other js files, query variables and headers. A reference is the name not preceded by a letter, digit, `_`, `$` or `.`. A spread (`...filter.getWhere()`) ends in dots, so a "not preceded by `.`" rule misses it; handle it explicitly. In the raw JSON text a binding that starts on a new line holds `\n` before the name (`"{{\ntreeJs.get()}}"`), so a name preceded by that `n` is missed too; work on the parsed strings or handle it explicitly.
 2. Check that no local variable in any js file already uses the new name.
 3. Run `tool.mjs validate` (it compiles every js file and binding and reports names that are not defined), then open the page and use each panel once.
 4. Each view of an app is its own document with its own js files, so rename the other views in their own pass; keep the same names across views for the same role (`table`, `filter`, `constants`).
