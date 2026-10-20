@@ -61,5 +61,5 @@ Register the routes by hand, then typecheck and lint (see SKILL.md). Rendering a
 2. Every query used by a view is declared in that view: queries are per JSON, not shared.
 3. `validate` passes, including the reference check for script, query and block names.
 4. `render` matches the design at the design's content width.
-5. Every Table and List has an empty state, hidden when there are rows and shown instead of the table when there are none (`references/blocks/table.md`).
+5. Every Table, List and Repeater has an empty state, hidden when there are rows and shown instead of the table when there are none (`references/blocks/table.md`).
 6. Every route the views navigate to is in the router snippet, and every relative link resolves to one of them from each view's own URL (a view at `/<name>/:id/edit` goes back with `'../..'`, not `'..'`).
