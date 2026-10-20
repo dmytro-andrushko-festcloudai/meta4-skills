@@ -28,6 +28,8 @@ transition: width 300ms ease;
 ```
 Do not use the older `position: absolute` overlay (`& > div { position: absolute; right: 0; ... }`): the open box covers the end of the tab underline. Reference: `InputAccessSearch` and `InputDrawerSearch` in `security-service/schemas/access.json`. Scripts keep working: SearchInput has `.value`, `setValue()`, `clearValue()`.
 
+This applies to a search in the same row as a `Tabs` (the drawer's "Всі працівники / Обрані" row). A search inside a right-aligned cluster of buttons and menus (toolbar controls with no tabs) must not grow in place: it would push the buttons past the container edge. Keep the overlay there, anchored to the right edge: `position: relative;` on the wrapper, and `& > div { position: absolute; top: 0; right: 0; z-index: 1; background: #fff; }` with the `:focus-within` / `:has(input:not(:placeholder-shown))` rule setting `width: 200px` on the inner `div`.
+
 ## Tabs in a white panel
 
 give the panel `borderRadius: '8px'` and `padding: '19px'` (20px minus the 1px border). Header cards above the tabs keep `12px`. The space under the strip comes from the tab content Stack, see the first rule above.
