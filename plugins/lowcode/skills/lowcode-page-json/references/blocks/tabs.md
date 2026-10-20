@@ -26,9 +26,13 @@ transition: width 300ms ease;
   width: 200px;
 }
 ```
-Do not use the older `position: absolute` overlay (`& > div { position: absolute; right: 0; ... }`): the open box covers the end of the tab underline. Reference: `InputAccessSearch` and `InputDrawerSearch` in `security-service/schemas/access.json`. Scripts keep working: SearchInput has `.value`, `setValue()`, `clearValue()`.
+Do not use the older `position: absolute` overlay (`& > div { position: absolute; right: 0; ... }`): the open box covers the end of the tab underline. Reference: `InputAccessSearch` and `InputDrawerSearch` in `security-service/schemas/access.json`. Scripts keep working: SearchInput has `.value`, `setValue()`, `clearValue()`. In a Drawer set `size: 'sm'` on the `SearchInput` (the page-level toolbar keeps the default `md`).
 
-This applies to a search in the same row as a `Tabs` (the drawer's "Всі працівники / Обрані" row). A search inside a right-aligned cluster of buttons and menus (toolbar controls with no tabs) must not grow in place: it would push the buttons past the container edge. Keep the overlay there, anchored to the right edge: `position: relative;` on the wrapper, and `& > div { position: absolute; top: 0; right: 0; z-index: 1; background: #fff; }` with the `:focus-within` / `:has(input:not(:placeholder-shown))` rule setting `width: 200px` on the inner `div`.
+This applies to a search in the same row as a `Tabs`: beside it in a row Stack (the drawer's "Всі працівники / Обрані" row) or inside its `toolbar` slot (`showToolbar`, the drawer's "Права / Працівники" row with search, sort and filter), where the toolbar Stack hugs and the tab strip gives up the space. A search inside a right-aligned cluster of buttons and menus (toolbar controls with no tabs) must not grow in place: it would push the buttons past the container edge. Keep the overlay there, anchored to the right edge: `position: relative;` on the wrapper, and `& > div { position: absolute; top: 0; right: 0; z-index: 1; background: #fff; }` with the `:focus-within` / `:has(input:not(:placeholder-shown))` rule setting `width: 200px` on the inner `div`.
+
+## A search shared by several tabs must work on every tab
+
+If one `SearchInput` sits above tabs that show different data (a server-loaded "all" tab and a client-side "selected" tab), each tab's rows must honour it, or the input must be hidden on the tab where it does nothing (`visible: "{{ !drawer.isRights() }}"`). A server query is re-run only for the tab it feeds (`if (this.tab === 'all') await this.load()`), while the other tab filters its rows in the script by the same terms. The empty state, the pagination condition and the empty hint then use the filtered rows, not the raw count.
 
 ## Tabs in a white panel
 
