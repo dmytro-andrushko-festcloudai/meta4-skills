@@ -3,8 +3,7 @@
 Translations with `app.libraries.i18n`, called through a short page-level `i18n` js file. Reference implementations: the taxonomies pages (`apps/lowcode/src/pages/taxonomies/schemas/list.json` and `merge.json`) and `app-info`.
 
 Older layouts are superseded; convert them when you touch such a page (see "Converting an older page"):
-- flat locale files registered by `init`, every call spelled `app.libraries.i18n.t(...)` (the dictionaries pages);
-- an `i18n` js file with a `flatten` helper, written before the runtime read nested keys: drop the helper and pass the locale files to `init` as they are;
+- flat locale files registered by `init`, every call spelled `app.libraries.i18n.t(...)` (the dictionaries and uom pages before conversion);
 - a `translations` script plus an `i18n` wrapper (security-service pages at commit `5e924080c`).
 
 ## Ask first
@@ -17,10 +16,10 @@ Before planning a page, ask the user whether it should be localised. Default to 
 
 | Call | Where | Notes |
 |------|-------|-------|
-| `init(dictionaries)` | scripts only | `{ uk: {…}, en: {…} }`; each dictionary may nest |
-| `t('key')`, `t('key', { name })`, `t('key', { count })` | scripts and bindings | `key` is a dotted path into the dictionary; `{name}` placeholders; plurals by `count` |
+| `init(dictionaries)` | scripts only | `{ uk: {…}, en: {…} }`; each dictionary must be **flat** (`{ 'common.cancel': '…' }`) |
+| `t('key')`, `t('key', { name })`, `t('key', { count })` | scripts and bindings | `key` is a flat dictionary key such as `'common.cancel'`; `{name}` placeholders; plurals by `count` |
 
-Lookup order for a key: the exact flat key first (`'common.cancel'` as one property), then the dotted path walked through nested objects (`common` → `cancel`), then the next language, then the key itself is returned. The language is `app.user.locale` (`'en'` or `'uk'`). Dates: `app.libraries.dayjs`.
+Lookup order for a key: the plural key (`key_few`, when `count` is passed), then the key itself, in the user's language, then in the next language; when nothing matches, the key itself is returned. The lookup is flat only: `t` reads `dictionary['common.cancel']` and **does not walk nested objects**, so a nested dictionary passed to `init` as is renders every key as its raw name. That is why the `i18n` js file flattens the locale files first. The language is `app.user.locale` (`'en'` or `'uk'`). Dates: `app.libraries.dayjs`.
 
 `t` reads signals, so a binding that calls it re-renders when `init` sets the dictionaries or the user switches language.
 
@@ -32,7 +31,7 @@ The `localization` folder holds exactly three js files, in this order:
 |---|---|
 | `localeUk` | returns the Ukrainian dictionary, nested |
 | `localeEn` | returns the English dictionary, same keys |
-| `i18n` | registers both and exposes `t` |
+| `i18n` | flattens both, registers them and exposes `t` |
 
 The locale files only return an object; no logic, no `init` call:
 
@@ -60,10 +59,19 @@ return {
 };
 ```
 
-`i18n` is the whole wrapper:
+`i18n` is the whole wrapper. Copy it unchanged; the `flatten` helper turns `{ common: { cancel } }` into `{ 'common.cancel' }`, which is the only shape the runtime reads:
 
 ```js
-app.libraries.i18n.init({ uk: localeUk, en: localeEn });
+const flatten = (dictionary, prefix = '') =>
+  Object.entries(dictionary).reduce((result, [key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+
+    return value && typeof value === 'object'
+      ? { ...result, ...flatten(value, path) }
+      : { ...result, [path]: value };
+  }, {});
+
+app.libraries.i18n.init({ uk: flatten(localeUk), en: flatten(localeEn) });
 
 return {
   t: (key, vars) => app.libraries.i18n.t(key, vars),
@@ -114,7 +122,7 @@ Edit the page JSON in place, so block, folder, script and query ids stay the sam
 
 1. Map every old flat key to its new path (`createTitle` → `createForm.title`, `stateCatalog` → `states.catalog`), plural bases included.
 2. Rewrite `localeUk` and `localeEn` as nested objects from that map, values unchanged.
-3. Add the `i18n` js file to the `localization` folder after the locale files; remove the `init(...)` line from the entry js file.
+3. Add the `i18n` js file (with `flatten`, as above) to the `localization` folder after the locale files; remove the `init(...)` line from the entry js file. The `i18n` js file must come before the entry js file in the scripts list.
 4. Replace `app.libraries.i18n.t(` with `i18n.t(` everywhere and each key with its new path, including `labelKey`s and keys passed with `count`.
 5. Drop a `Js` suffix from js file names in the same pass (`references/scripts-and-queries.md`, "Renaming a js file or a query"). A reference inside a binding can follow a `\n` escape in the raw JSON text (`"{{\ntreeJs.get()}}"`), so a word-boundary regex over the raw JSON misses it; `validate` reports what was missed.
 
@@ -124,4 +132,4 @@ Edit the page JSON in place, so block, folder, script and query ids stay the sam
 - Every `i18n.t('…')` key and every `labelKey` exists in both locale files, and every locale key is used.
 - No `app.libraries.i18n.t(` is left outside the `i18n` js file.
 - No Ukrainian or English literal is left in a block `text`, `label`, `placeholder`, `title` or `validationMessage`, in a table column `title`, or in an `app.showAlert` / `new Error` message.
-- The `localization` folder holds only `localeUk`, `localeEn` and `i18n`; `i18n` calls `init` on its first line.
+- The `localization` folder holds only `localeUk`, `localeEn` and `i18n`; `i18n` defines `flatten` and passes both locale files through it to `init`.
