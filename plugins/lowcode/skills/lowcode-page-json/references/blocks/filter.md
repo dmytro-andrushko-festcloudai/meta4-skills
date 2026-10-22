@@ -17,3 +17,7 @@ If `isSame()`/`isChanged()` reads the search text, the first letter typed flips 
 ## Reset the search boxes when the user switches category
 
 Bind the Filter's `onCategoryChange` to `{{ filter.resetSearch() }}`, which sets every category's search `Input` to `''`. Leave the ticked values alone, so switching tabs does not drop a selection.
+
+## Search inputs inside a `Filter` panel are `size: 'sm'`
+
+Every `Input` (and `SearchInput`) in a `Filter` category panel, such as the search above a checkbox group, gets `size: 'sm'`. The panel is dense, and `validate` flags a missing `size` anyway.

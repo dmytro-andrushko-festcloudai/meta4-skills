@@ -91,6 +91,19 @@ return {
 
 **If every gated control is hidden for a user who has the permissions,** the page is running without a user: `app.hasPermission` falls back to the engine's empty host. Pages rendered as shell workspace pages go through `LowCodePage` → `PageViewer`, which must pass and wrap `user` (`UserProvider`) the same way `LowCode.tsx` → `App` does. The console's `Unknown Event type: webpackOk` lines come from the React DevTools extension and are unrelated.
 
+## Create and edit pages show a "no access" state without the edit permission
+
+Hiding the Save button is not enough on a create or edit page: a user without the edit permission can open `/create` or `/:id/edit` by URL and sees an empty form that cannot be saved. Every create or edit page gets a "no access" state. List and preview pages do not need one, they gate their action buttons only (the section above).
+
+How to build it (reference: `apps/lowcode/src/pages/banks/schemas/form.json`, `legal-entities/schemas/form.json`):
+- Keep the breadcrumbs and the title row as they are. The Save button already has `visible: {{ permissions.canEdit() }}`.
+- Set `visible: {{ permissions.canEdit() }}` on every top-level card or section of the form (not on the title row).
+- Add one `StackNoAccess` right before the first card with `visible: {{ !permissions.canEdit() }}`: a centred column Stack (`gap: '24px'`, `horizontalAlign` and `verticalAlign` `center`, `customCss: 'min-height: max(320px, calc(100vh - 260px));'`) holding the empty-state `Image` (`assets/images/island-with-pc-x2.webp`, same settings as the empty state in `references/blocks/table.md`) and a text Stack with a title (`heading5-m`, `#252B37`: "Недостатньо прав") and a hint (`body4-r`, `#858C99`: "У вас немає доступу до створення та редагування …", naming what the page edits). On a localised page the two texts are keys (`noAccessTitle`, `noAccessHint`) in both locale files.
+- Bind to the same `permissions.canEdit()` as the Save button, never read the permission in `init`: the user's permissions can still be loading when `init` runs, and a redirect there would send everyone away. A binding re-evaluates when they arrive.
+- This hides the UI only. The page still runs its load queries for a user without access; the real protection is the Hasura permission on the tables.
+
+Check it: the render harness runs with no permissions, so `tool.mjs render <page.json> shot.png` shows the no-access state, and the permitted state needs a copy of the page with `canEdit()` forced to `true`. For a manual check in the app, temporarily return `false` from `canEdit()` in the page's `permissions` script and revert it afterwards.
+
 ## Rules for actions
 
 ### Gate actions on the record's status in every place they appear

@@ -134,6 +134,18 @@ Forms: `examples/nomenclatures-form` serves create and edit from one page. `init
 
 Modals (`examples/dictionary-items`): one script per modal owns `currentItem`, `toggleModal(item)`, `close()`, `onSubmit()` and a `loading` flag; the modal's fields are reset after the close animation, and the list is re-fetched after a successful mutation.
 
+## Dependent mutations: keep the created id so a retry cannot create a second record
+
+When a submit runs several mutations one after another and the later ones need the id the first one returned (create the entity, then its address, then its contacts), a failure in a later step leaves the first record saved. The form is still on screen with the same data, so pressing Save again runs the create again and makes a duplicate. Every such submit follows these rules:
+
+1. **Store the id as soon as the create returns**, in script state (`createdId: null`), before the next step runs. The next call picks `const entityId = init.id || this.createdId` and takes the update path when it is set, so edits made between attempts are applied to the same record instead of creating a new one.
+2. **Run the steps in order with `await`, not `Promise.all`.** In parallel, one step can succeed while another fails, and the retry then repeats the step that succeeded (duplicate contacts, a second address link). Put the step that writes the most rows last, and make each step a single request where possible, so a failed step saved nothing and is safe to repeat.
+3. **Make each step safe to repeat.** Look up before inserting (find the existing address, then insert only if there is none) and keep the id a step returns (`this.affiliationId = data.affiliation.fcp_id`) so the retry updates that row instead of inserting another. Do not rely on data re-fetched by the page, it is not reloaded between attempts.
+4. **Navigate and show the success alert only after the last step.** On a failure show the error alert, stay on the page, keep the stored ids, and leave the Save button enabled so the user can retry.
+5. **Reset the stored ids when the form is closed or reopened** (a page remount does it; a modal needs an explicit reset in its `show()`).
+
+Reference: `onSubmit` in `apps/lowcode/src/pages/legal-entities/schemas/form.json` (`createdId`, address then contacts, `affiliationId`).
+
 ## Mock-first data
 
 When the API is not ready, put the data in a script and bind to it exactly as if it were a query result, so swapping in the real query changes only the binding: `data: '{{ items.rows }}'` becomes `'{{ getItems.data.items }}'`. `examples/nomenclatures-preview/scripts/*.txt` shows the shape: small scripts that return the label/value rows a `Repeater` renders. Always say in the report which parts are mock.

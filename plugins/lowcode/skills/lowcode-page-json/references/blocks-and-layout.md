@@ -56,7 +56,7 @@ Read the file of every block the page uses before building it; each rule is a sh
 
 | Topic | File | Covers |
 |---|---|---|
-| Layout and Figma translation | `blocks/layout-and-design.md` | spacing, sizes, avatars, clickable cards, breadcrumbs, custom icons, long values, rendering a route |
+| Layout and Figma translation | `blocks/layout-and-design.md` | spacing, sizes, avatars (person and employee avatar by gender), clickable cards, breadcrumbs, custom icons, long values, rendering a route |
 | Table and List | `blocks/table.md` | cell alignment, pagination, read-only tables, row highlight, empty state, header row, hover actions, checkbox matrices |
 | Modal and Drawer | `blocks/overlays.md` | close button, fixed header and actions with scrolling fields, pinned drawer footer, opening one from another |
 | Filter | `blocks/filter.md` | category panels, static option lists, draft vs applied state, resetting search |

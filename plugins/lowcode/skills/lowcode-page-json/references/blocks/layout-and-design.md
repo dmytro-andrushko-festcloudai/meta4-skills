@@ -20,7 +20,16 @@ Overlay text on a shape with a parent `customCss: 'position: relative;'` and a c
 
 ## Avatars
 
-leave `src` empty and set `fallback` to `man`, `woman` or `no_photo` (files under `assets/images/image/`). Do not copy Figma avatar art into the repo.
+Leave `src` empty and set `fallback` to `man`, `woman` or `no_photo` (files under `assets/images/image/`). Do not copy Figma avatar art into the repo.
+
+### Person and employee avatar
+
+Every place that shows a person (employee rows, managers, responsible people, contact cards) uses the same rule: the photo from the database first, otherwise the coloured avatar for the person's gender (woman pink, man purple), otherwise the neutral `no_photo`. Bind `src` to the photo and `fallback` to the gender avatar; the Image block shows `fallback` only when `src` is empty.
+
+- **Get the gender with the person.** Select `gender` next to `first_name` and `second_name` on the person (`employees_fcp_id_persons { first_name second_name gender }`) and the photo from the principal contacts (`contact_principal_fcp_id_array(where: { contact_source: { _in: ["phone", "email", "photo"] } })`, `contact_source` `photo`). Never hardcode the avatar.
+- **Map the value in a script, not in the binding.** `gender` is free text, so lower-case and trim it, then match lists: male `m, male, man, ч, чоловік, чоловіча` gives `man`; female `f, female, woman, ж, жінка, жіноча` gives `woman`; anything else, including empty, gives `no_photo`. Expose the result as `avatar` (or `gender`) on the row and bind `fallback` to it. Reference: `employees.getAvatar` and `workgroups.avatarOf` in `mdm-workgroups/schemas/workgroups.json`.
+- **A name or photo can live in a different schema than the relation.** A `mdm_principal_relationship` target principal often has no `name`, `photo` or contacts in the `mdm_*` tables, and `mdm_principal_v1_principals` has no `persons` relation. Read the person from the people schema (`fest_people_employee_v1_employees(where: { fcp_id: { _in: $ids } })`, the employee id equals the principal id), run that second query with the ids from the first one, and fall back to the principal data when the person has no employee record.
+- **Size and radius follow the design** (`size: '20'`, `radius: '2'` in a management row, the table avatar size in a list row). Keep a person row hidden when there is no person, instead of rendering a placeholder with `-`.
 
 ## Conditional rows
 
