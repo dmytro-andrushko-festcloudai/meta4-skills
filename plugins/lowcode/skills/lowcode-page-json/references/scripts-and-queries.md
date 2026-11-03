@@ -4,7 +4,7 @@ How to name, group and order the js files (`scripts`) and `queries` of a page. T
 
 ## Names
 
-- **Js files: the role, camelCase.** `table`, `filter`, `sorting`, `drawer`, `access`, `permissions`, `constants`, `init`, `localeUk`, `localeEn`, `i18n`. A js file owns one area of the page, so its name is the area. **No `Js` suffix**: some older pages suffix every js file (`tableJs`, `localeUkJs`, the dictionaries pages); when you edit such a page, drop the suffix from all its js files in one pass ("Renaming a js file or a query" below), never mix both styles on one page.
+- **Js files: the role, camelCase.** `table`, `filter`, `sorting`, `drawer`, `access`, `permissions`, `constants`, `localeUk`, `localeEn`, `i18n`. A js file owns one area of the page, so its name is the area. There is no `init` js file: the entry point is the page `init` code (`root.props.init`), see `references/script-files.md`. **No `Js` suffix**: some older pages suffix every js file (`tableJs`, `localeUkJs`, the dictionaries pages); when you edit such a page, drop the suffix from all its js files in one pass ("Renaming a js file or a query" below), never mix both styles on one page.
 - **Queries: verb plus entity.** `getRoles`, `getRolePermissions`, `createRole`, `updateRole`, `deleteDraftRole`, `assignRole`, `upsertPersonConditionValues`. Read queries start with `get`, writes with `create`, `update`, `delete`, `assign`, `upsert`. A REST call follows the same rule (`activateRole`).
 - **Blocks stay PascalCase** (`TableRoles`, `ModalDelete`), so a lower-case js file name never collides with a block name.
 - **Names are one namespace for the whole page.** Blocks, queries and js files share it, and the engine reserves some words (`app`, `params`, `inputs`, `currentItem`, `currentIndex`, `parent`, `self`, `top`, the JS globals and keywords). `validateName` in the editor and `tool.mjs validate` report a clash. `filter`, `table` and `drawer` are fine, `top` and `self` are not.
@@ -21,7 +21,7 @@ Group by domain, the area of the screen, not by the kind of code. Never make a `
 
 | Folder | What goes in it |
 |---|---|
-| `core` | `init`, `constants`, `permissions`: what every other area reads |
+| `core` | `constants`, `permissions`: what every other area reads |
 | `localization` | exactly `localeUk`, `localeEn` and the `i18n` wrapper, nothing else; see `references/blocks/localization.md` |
 | one folder per feature area, named after it: `table`, `filter`, `drawer`, `access`, `itemForm`, `deleteItem`, ... | the js files of that area and the queries they call |
 
@@ -37,10 +37,10 @@ Order in the arrays (the editor shows them in this order): `localization`, `core
 
 ## How js files talk to each other
 
-- Reach another js file by its name: `table.getData()`, `permissions.canEditRole()`; translations through `i18n.t('roles.title')`.
-- `i18n` registers the dictionaries when the page loads; `init` is the entry point that loads the page data. Nothing else runs on page load except queries with `runOnPageLoad`.
+- Reach another js file by its name and what it exports: `table.getData()`, `filter.selectedFilters`, `permissions.canEditRole()`; translations through `i18n.t('roles.title')`. A name that is not exported is private to its file. Rules for `export`, `state` and `update`: `references/script-files.md`.
+- `i18n` registers the dictionaries when the page loads; the page `init` (`root.props.init`, not a js file) starts loading the page data. Nothing else runs on page load except queries with `runOnPageLoad`.
 - `constants` holds endpoints and fixed lists. Labels that are shown to the user are keys in the locale js files, never literals in `constants` (a constant is built once and would stay in the first language).
-- Avoid cycles at load time: a js file that calls another one at its top level needs that one to exist and not call back.
+- Avoid cycles at load time: a js file that reads another one at its top level (a derived `export const`) needs that one to exist and not read back.
 
 ## Worked example (the taxonomies pages)
 
@@ -49,7 +49,7 @@ Order in the arrays (the editor shows them in this order): `localization`, `core
 | Folder (list.json) | Scripts | Queries |
 |---|---|---|
 | `localization` | `localeUk`, `localeEn`, `i18n` | |
-| `core` | `constants`, `permissions`, `init` | |
+| `core` | `constants`, `permissions` | |
 | `tree` | `tree` | `getTaxonomies` |
 | `filter` | `filters` | |
 | `drawer` | `drawer` | |
@@ -59,7 +59,7 @@ Order in the arrays (the editor shows them in this order): `localization`, `core
 | Folder (merge.json) | Scripts | Queries |
 |---|---|---|
 | `localization` | `localeUk`, `localeEn`, `i18n` | |
-| `core` | `constants`, `permissions`, `init` | |
+| `core` | `constants`, `permissions` | |
 | `header` | `breadcrumbs` | |
 | `tree` | `tree` | `getTaxonomies` |
 | `merge` | `merge`, `preview` | `mergeTaxonomy` |
@@ -80,7 +80,7 @@ graphqlQuery('getRoles', query, { folder: 'table' });
 | Folder | Scripts | Queries |
 |---|---|---|
 | `localization` | `localeUk`, `localeEn`, `i18n` | |
-| `core` | `init`, `constants`, `permissions` | |
+| `core` | `constants`, `permissions` | |
 | `table` | `table`, `sorting` | `getRoles`, `getEmployeesByIds`, `activateRole` |
 | `filter` | `filter` | `getAuthorPrincipals` |
 | `drawer` | `drawer` | `getRolePermissions`, `deleteDraftRole`, `deletePublishedRole` |

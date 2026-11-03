@@ -1,7 +1,7 @@
-const params = app.URL;
-const lng = params?.lng || 'uk';
+const lng = app.URL?.lng || 'uk';
 
-return {
-  GRAPHQL_URL: 'https://hasura-qa.srv.festcloud.ai/v1/graphql',
-  basePath: `/${lng}/low-code/nomenclatures`,
-};
+export const GRAPHQL_URL = 'https://hasura-qa.srv.festcloud.ai/v1/graphql';
+
+export const basePath = `/${lng}/low-code/nomenclatures`;
+
+export const id = app.mode === 'editor' ? '4e5abfe3-e929-4f7d-ac00-ff47a89e132a' : app.URL.params?.id || null;

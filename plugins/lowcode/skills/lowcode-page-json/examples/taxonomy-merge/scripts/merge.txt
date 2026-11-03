@@ -1,104 +1,102 @@
-return {
-  loading: false,
-  sourceId: null,
-  targetId: null,
+export const loading = state(false);
+export const sourceId = state(null);
+export const targetId = state(null);
 
-  onSourceTaxonomyChange(value) {
-    this.sourceId = value || null;
+export function onSourceTaxonomyChange(value) {
+  update(sourceId, value || null);
+  TreeSource.reset();
+}
+
+export function onTargetTaxonomyChange(value) {
+  update(targetId, value || null);
+  TreeTarget.reset();
+}
+
+export function getSourceNode() {
+  return tree.findNode(tree.getNodes(sourceId), TreeSource.selectedId);
+}
+
+export function getTargetNode() {
+  return tree.findNode(tree.getNodes(targetId), TreeTarget.selectedId);
+}
+
+export function getTargetParentId() {
+  return getTargetNode()?.id || null;
+}
+
+export function canPreview() {
+  return Boolean(getSourceNode() && getTargetNode());
+}
+
+export function canMerge() {
+  const source = getSourceNode();
+
+  return Boolean(canPreview() && source.item.parent_fcp_id !== getTargetParentId() && !loading);
+}
+
+export function getDuplicates() {
+  const source = getSourceNode();
+
+  if (!source || !targetId) return [];
+
+  const toKey = (name) => String(name ?? '').trim().toLowerCase();
+  const targetNames = new Set(tree.flatten(tree.getNodes(targetId)).map((node) => toKey(node.item.name)));
+  const names = tree
+    .flatten([source])
+    .map((node) => node.item.name)
+    .filter((name) => targetNames.has(toKey(name)));
+
+  return Array.from(new Set(names));
+}
+
+export function getDuplicatesTitle() {
+  const count = getDuplicates().length;
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+
+  if (lastDigit === 1 && lastTwoDigits !== 11) return `Виявлено ${count} дублікат`;
+
+  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14)) {
+    return `Виявлено ${count} дублікати`;
+  }
+
+  return `Виявлено ${count} дублікатів`;
+}
+
+export function getDuplicatesList() {
+  return getDuplicates()
+    .map((name) => `- ${name}`)
+    .join('\n');
+}
+
+export async function onMerge() {
+  const source = getSourceNode();
+  const parentId = getTargetParentId();
+
+  if (!source || !parentId) return;
+
+  update(loading, true);
+
+  try {
+    const { data, error } = await mergeTaxonomy.run({ id: source.id, object: { parent_fcp_id: parentId } });
+
+    if (error) throw new Error(error);
+
+    if (!data?.taxonomy?.fcp_id) {
+      throw new Error('Не вдалося об’єднати таксономії');
+    }
+
     TreeSource.reset();
-  },
 
-  onTargetTaxonomyChange(value) {
-    this.targetId = value || null;
-    TreeTarget.reset();
-  },
+    const reloaded = await tree.reload({ notify: false });
 
-  getSourceNode() {
-    return tree.findNode(tree.getNodes(this.sourceId), TreeSource.selectedId);
-  },
-
-  getTargetNode() {
-    return tree.findNode(tree.getNodes(this.targetId), TreeTarget.selectedId);
-  },
-
-  getTargetParentId() {
-    return this.getTargetNode()?.id || null;
-  },
-
-  canPreview() {
-    return Boolean(this.getSourceNode() && this.getTargetNode());
-  },
-
-  canMerge() {
-    const source = this.getSourceNode();
-
-    return Boolean(this.canPreview() && source.item.parent_fcp_id !== this.getTargetParentId() && !this.loading);
-  },
-
-  getDuplicates() {
-    const source = this.getSourceNode();
-
-    if (!source || !this.targetId) return [];
-
-    const toKey = (name) => String(name ?? '').trim().toLowerCase();
-    const targetNames = new Set(tree.flatten(tree.getNodes(this.targetId)).map((node) => toKey(node.item.name)));
-    const names = tree
-      .flatten([source])
-      .map((node) => node.item.name)
-      .filter((name) => targetNames.has(toKey(name)));
-
-    return Array.from(new Set(names));
-  },
-
-  getDuplicatesTitle() {
-    const count = this.getDuplicates().length;
-    const lastDigit = count % 10;
-    const lastTwoDigits = count % 100;
-
-    if (lastDigit === 1 && lastTwoDigits !== 11) return `Виявлено ${count} дублікат`;
-
-    if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14)) {
-      return `Виявлено ${count} дублікати`;
-    }
-
-    return `Виявлено ${count} дублікатів`;
-  },
-
-  getDuplicatesList() {
-    return this.getDuplicates()
-      .map((name) => `- ${name}`)
-      .join('\n');
-  },
-
-  async onMerge() {
-    const source = this.getSourceNode();
-    const parentId = this.getTargetParentId();
-
-    if (!source || !parentId) return;
-
-    this.loading = true;
-
-    try {
-      const { data, error } = await mergeTaxonomy.run({ id: source.id, object: { parent_fcp_id: parentId } });
-
-      if (error) throw new Error(error);
-
-      if (!data?.taxonomy?.fcp_id) {
-        throw new Error('Не вдалося об’єднати таксономії');
-      }
-
-      TreeSource.reset();
-
-      const reloaded = await tree.reload({ notify: false });
-
-      app.showAlert(
-        reloaded ? 'Таксономії успішно об’єднано' : 'Таксономії об’єднано, але не вдалося оновити дерево',
-        reloaded ? 'success' : 'info'
-      );
-    } catch (error) {
-      app.showAlert(error?.message || 'Не вдалося об’єднати таксономії', 'error');
-    } finally {
-      this.loading = false;
-    }
-  },
-};
+    app.showAlert(
+      reloaded ? 'Таксономії успішно об’єднано' : 'Таксономії об’єднано, але не вдалося оновити дерево',
+      reloaded ? 'success' : 'info'
+    );
+  } catch (error) {
+    app.showAlert(error?.message || 'Не вдалося об’єднати таксономії', 'error');
+  } finally {
+    update(loading, false);
+  }
+}

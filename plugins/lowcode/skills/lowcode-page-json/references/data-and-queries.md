@@ -30,18 +30,17 @@ REST: `kind: "rest"`, `url`, `method` (GET/POST/PUT/PATCH/DELETE), `headers`, `b
 
 ## Scripts
 
-A script is the body of a function that returns an object; methods on it are the page's handlers.
+A js file is a module: `export function` handlers and getters, `export const x = state(...)` for what the page follows, `update(x, next)` to change it, and a page-level `init` that starts the first load. Full rules and the conversion table are in `references/script-files.md`.
 
 ```js
-return {
-  async getData() {
-    Table1.setPage(1);
-    await getLegalEntities.run();
-  },
-  onEdit() {
-    app.navigate(`${Table1.selectedRow.fcp_id}/edit`);
-  },
-};
+export async function getData() {
+  Table1.setPage(1);
+  await getLegalEntities.run();
+}
+
+export function onEdit() {
+  app.navigate(`${Table1.selectedRow.fcp_id}/edit`);
+}
 ```
 
 Conventions from `legal-entities`: `constants` holds `GRAPHQL_URL` (navigation is relative, so there is no `basePath`: see "Navigation" below); one script per concern (table, filter, form, breadcrumbs, options); a data-shaping script turns the query response into the rows the blocks bind to (`getData()` returning `{ fcp_id, name, ... }[]`), so bindings stay one-liners.
@@ -49,10 +48,8 @@ Conventions from `legal-entities`: `constants` holds `GRAPHQL_URL` (navigation i
 **Every endpoint and service URL lives in the page's constants script, and queries read only from there.** One place to point a page at a mock or another environment:
 
 ```js
-return {
-  GRAPHQL_URL: app.env.GRAPHQL_URL,
-  SECURITY_SERVICE_URL: app.env.SECURITY_SERVICE_URL || 'https://internal.dev.api.festcloud.ai/security-service',
-};
+export const GRAPHQL_URL = app.env.GRAPHQL_URL;
+export const SECURITY_SERVICE_URL = app.env.SECURITY_SERVICE_URL || 'https://internal.dev.api.festcloud.ai/security-service';
 ```
 
 GraphQL queries use `"endpoint": "{{ constants.GRAPHQL_URL }}"`; REST queries `"url": "{{ constants.SECURITY_SERVICE_URL }}/api/v1/roles?role={{ encodeURIComponent(params.role) }}"` (inside a template-literal URL: `${constants.SECURITY_SERVICE_URL}`). `app.env` exposes `GRAPHQL_URL`, `GRAPHQL_WS_URL` and `SECURITY_SERVICE_URL` (from `NX_PUBLIC_JWT_SERVICE_API_URL`); never hardcode a host in a query. Security-service REST: activate `POST /api/v1/roles?role=<name>`, delete a published role `DELETE /api/v1/roles?role=<name>` (not the `securityservice_deleteRole` Hasura action); a non-2xx response becomes `result.error`.
@@ -130,17 +127,17 @@ if (!result?.data?.insert_securityservice_person_roles_v0?.affected_rows) {
 - When several mutations run in one operation, check each one only when it had work to do: `if ((toDelete.length && !deleted) || (toAdd.length && !added))`. A delete of optional child rows that may legitimately match nothing is not checked; the parent's result is.
 - Hasura actions (`securityservice_deleteRole`, activate) return a custom shape. Ask what a failure looks like instead of guessing a check.
 
-Forms: `examples/nomenclatures-form` serves create and edit from one page. `init` reads `app.URL.params.id` and loads the record when present, lookup queries run on page load, and `form` computes the submit-disabled state from each field's `valid` and `dirty` and performs the mutations. `legal-entities` splits the same thing into `create.json` and `edit.json`. Do not reinvent either.
+Forms: `examples/nomenclatures-form` serves create and edit from one page. `constants.id` holds `app.URL.params.id`, the page `init` calls `form.load()` which loads the record when there is an id, lookup queries run on page load, and `form` computes the submit-disabled state from each field's `valid` and `dirty` and performs the mutations. `legal-entities` splits the same thing into `create.json` and `edit.json`. Do not reinvent either.
 
-Modals (`examples/dictionary-items`): one script per modal owns `currentItem`, `toggleModal(item)`, `close()`, `onSubmit()` and a `loading` flag; the modal's fields are reset after the close animation, and the list is re-fetched after a successful mutation.
+Modals (`examples/dictionary-items`): one js file per modal owns an `item` state, `toggleModal(item)`, `close()`, `onSubmit()` and a `loading` state (never name a state `currentItem`: the engine reserves it); the modal's fields are reset after the close animation, and the list is re-fetched after a successful mutation.
 
 ## Dependent mutations: keep the created id so a retry cannot create a second record
 
 When a submit runs several mutations one after another and the later ones need the id the first one returned (create the entity, then its address, then its contacts), a failure in a later step leaves the first record saved. The form is still on screen with the same data, so pressing Save again runs the create again and makes a duplicate. Every such submit follows these rules:
 
-1. **Store the id as soon as the create returns**, in script state (`createdId: null`), before the next step runs. The next call picks `const entityId = init.id || this.createdId` and takes the update path when it is set, so edits made between attempts are applied to the same record instead of creating a new one.
+1. **Store the id as soon as the create returns**, in a state (`export const createdId = state(null)`; `update(createdId, id)`), before the next step runs. The next call picks `const entityId = constants.id || createdId` and takes the update path when it is set, so edits made between attempts are applied to the same record instead of creating a new one.
 2. **Run the steps in order with `await`, not `Promise.all`.** In parallel, one step can succeed while another fails, and the retry then repeats the step that succeeded (duplicate contacts, a second address link). Put the step that writes the most rows last, and make each step a single request where possible, so a failed step saved nothing and is safe to repeat.
-3. **Make each step safe to repeat.** Look up before inserting (find the existing address, then insert only if there is none) and keep the id a step returns (`this.affiliationId = data.affiliation.fcp_id`) so the retry updates that row instead of inserting another. Do not rely on data re-fetched by the page, it is not reloaded between attempts.
+3. **Make each step safe to repeat.** Look up before inserting (find the existing address, then insert only if there is none) and keep the id a step returns (`update(affiliationId, data.affiliation.fcp_id)`) so the retry updates that row instead of inserting another. Do not rely on data re-fetched by the page, it is not reloaded between attempts.
 4. **Navigate and show the success alert only after the last step.** On a failure show the error alert, stay on the page, keep the stored ids, and leave the Save button enabled so the user can retry.
 5. **Reset the stored ids when the form is closed or reopened** (a page remount does it; a modal needs an explicit reset in its `show()`).
 
@@ -174,4 +171,4 @@ Page JSON ships to every browser. Headers are `Authorization: Bearer ${app.token
 
 ### Script state and mock lists
 
-a script can keep state on itself (`this.items = [...]`, `this.mode = 'edit'`) and bindings re-render. A mock CRUD page keeps `items` in the script, derives rows in one `getRows()` (search, filters, sort, then map to display fields) and mutates `this.items` in `save()` and `confirmDelete()`. Fill a modal form by calling `Input.setValue(...)` and `RadioGroup.setValue(...)` before `Modal.setOpen(true)`.
+a js file keeps its list in state (`export const items = state([...])`, `export const mode = state('edit')`) and bindings re-render when `update` changes it. A mock CRUD page keeps `items` in state, derives the rows in one exported `rows` value or a `getRows()` function (search, filters, sort, then map to display fields) and writes `update(items, (list) => [...list, row])` in `save()` and `update(items, (list) => list.filter(...))` in `confirmDelete()`. Fill a modal form by calling `Input.setValue(...)` and `RadioGroup.setValue(...)` before `Modal.setOpen(true)`.

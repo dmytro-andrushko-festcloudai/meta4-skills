@@ -5,24 +5,24 @@ const REQUIREMENTS = {
   remove: ['example_component_admin'],
 };
 
-const granted = () => getPermissions.data?.permissions ?? [];
+function granted() {
+  return getPermissions.data?.permissions ?? [];
+}
 
-const satisfies = (requirement) => {
+function satisfies(requirement) {
   const cut = requirement.lastIndexOf('_');
   const component = requirement.slice(0, cut);
   const level = LEVELS[requirement.slice(cut + 1)] ?? 0;
 
   return granted().some(({ data_component, action }) => data_component === component && (LEVELS[action] ?? 0) >= level);
-};
+}
 
-return {
-  ready() {
-    return Boolean(getPermissions.data);
-  },
+export function ready() {
+  return Boolean(getPermissions.data);
+}
 
-  can(action) {
-    const required = REQUIREMENTS[action] ?? [];
+export function can(action) {
+  const required = REQUIREMENTS[action] ?? [];
 
-    return this.ready() && required.every(satisfies);
-  },
-};
+  return ready() && required.every(satisfies);
+}

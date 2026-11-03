@@ -1,57 +1,55 @@
-return {
-  async getData() {
-    TableNomenclatures.setPage(1);
+export async function getData() {
+  TableNomenclatures.setPage(1);
 
-    await getNomenclatures.run();
-  },
+  await getNomenclatures.run();
+}
 
-  getVariables() {
-    const search = InputSearch.value?.trim();
-    const { names, manufacturers, countries } = filter.selectedFilters;
-    const pageSize = TableNomenclatures.pageSize || 15;
-    const filters = [];
+export function getVariables() {
+  const search = InputSearch.value?.trim();
+  const { names, manufacturers, countries } = filter.selectedFilters;
+  const pageSize = TableNomenclatures.pageSize || 15;
+  const filters = [];
 
-    if (search) {
-      filters.push({ name: { _ilike: `%${search}%` } });
-    }
+  if (search) {
+    filters.push({ name: { _ilike: `%${search}%` } });
+  }
 
-    if (names.length > 0) {
-      filters.push({ name: { _in: names } });
-    }
+  if (names.length > 0) {
+    filters.push({ name: { _in: names } });
+  }
 
-    if (manufacturers.length > 0) {
-      filters.push({ manufacturer_name: { _in: manufacturers } });
-    }
+  if (manufacturers.length > 0) {
+    filters.push({ manufacturer_name: { _in: manufacturers } });
+  }
 
-    if (countries.length > 0) {
-      filters.push({ country_of_origin: { _in: countries } });
-    }
+  if (countries.length > 0) {
+    filters.push({ country_of_origin: { _in: countries } });
+  }
 
-    return {
-      offset: ((TableNomenclatures.page || 1) - 1) * pageSize,
-      limit: pageSize,
-      order_by: sorting.getOrderBy(),
-      where: { _and: filters },
-    };
-  },
+  return {
+    offset: ((TableNomenclatures.page || 1) - 1) * pageSize,
+    limit: pageSize,
+    order_by: sorting.getOrderBy(),
+    where: { _and: filters },
+  };
+}
 
-  getRowActions() {
-    return [
-      { value: 'edit', label: 'Редагувати', icon: 'PencilSimple' },
-    ];
-  },
+export function getRowActions() {
+  return [
+    { value: 'edit', label: 'Редагувати', icon: 'PencilSimple' },
+  ];
+}
 
-  onMenuClick(value, item) {
-    if (value === 'edit') {
-      app.navigate(`${constants.basePath}/${item.fcp_id}/edit`);
-    }
-  },
+export function onMenuClick(value, item) {
+  if (value === 'edit') {
+    app.navigate(`${constants.basePath}/${item.fcp_id}/edit`);
+  }
+}
 
-  onCreate() {
-    app.navigate(`${constants.basePath}/create`);
-  },
+export function onCreate() {
+  app.navigate(`${constants.basePath}/create`);
+}
 
-  onPreview(item) {
-    app.navigate(`${constants.basePath}/${item.fcp_id}`);
-  },
-};
+export function onPreview(item) {
+  app.navigate(`${constants.basePath}/${item.fcp_id}`);
+}

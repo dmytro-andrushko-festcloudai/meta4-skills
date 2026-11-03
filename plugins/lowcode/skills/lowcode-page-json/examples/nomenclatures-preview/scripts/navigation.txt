@@ -1,17 +1,15 @@
-return {
-  isFromCreate() {
-    return app.URL.query?.from === 'create';
-  },
+export function isFromCreate() {
+  return app.URL.query?.from === 'create';
+}
 
-  goToList() {
-    app.navigate(constants.basePath);
-  },
+export function goToList() {
+  app.navigate(constants.basePath);
+}
 
-  goToEdit() {
-    const id = nomenclature.getItem()?.fcp_id;
+export function goToEdit() {
+  const id = nomenclature.getItem()?.fcp_id;
 
-    if (id) {
-      app.navigate(`${constants.basePath}/${id}/edit`);
-    }
-  },
-};
+  if (id) {
+    app.navigate(`${constants.basePath}/${id}/edit`);
+  }
+}

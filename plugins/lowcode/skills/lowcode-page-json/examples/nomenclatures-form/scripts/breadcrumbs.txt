@@ -1,27 +1,25 @@
-return {
-  getBreadcrumbs() {
-    const home = { id: 'home', label: 'Товари' };
+export function getBreadcrumbs() {
+  const home = { id: 'home', label: 'Товари' };
 
-    if (!init.id) {
-      return [home, { id: 'current', label: 'Створення товару' }];
-    }
+  if (!constants.id) {
+    return [home, { id: 'current', label: 'Створення товару' }];
+  }
 
-    return [
-      home,
-      { id: init.id, label: form.getItem()?.name || 'Завантаження...' },
-      { id: 'current', label: 'Редагування товару' },
-    ];
-  },
+  return [
+    home,
+    { id: constants.id, label: form.getItem()?.name || 'Завантаження...' },
+    { id: 'current', label: 'Редагування товару' },
+  ];
+}
 
-  onNavigate(id) {
-    if (id === 'home') {
-      app.navigate(constants.basePath);
-    } else if (id !== 'current') {
-      app.navigate(`${constants.basePath}/${id}`);
-    }
-  },
+export function onNavigate(id) {
+  if (id === 'home') {
+    app.navigate(constants.basePath);
+  } else if (id !== 'current') {
+    app.navigate(`${constants.basePath}/${id}`);
+  }
+}
 
-  onBack() {
-    app.navigate(init.id ? `${constants.basePath}/${init.id}` : constants.basePath);
-  },
-};
+export function onBack() {
+  app.navigate(constants.id ? `${constants.basePath}/${constants.id}` : constants.basePath);
+}

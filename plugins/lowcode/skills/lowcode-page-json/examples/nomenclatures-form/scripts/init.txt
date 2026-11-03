@@ -1,17 +1,1 @@
-const id = app.URL.params?.id || null;
-
-async function fetchData() {
-  if (!id) return;
-
-  const { error } = await getNomenclature.run({ id });
-
-  if (error) {
-    app.showAlert(error, 'error');
-  }
-}
-
-fetchData();
-
-return {
-  id,
-};
+form.load();

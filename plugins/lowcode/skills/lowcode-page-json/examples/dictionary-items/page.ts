@@ -36,7 +36,7 @@ export default page({
               name: 'TextTitle',
               color: '#161A22',
               text: `{{
-  dictionary.getDictionary()?.name || ''
+  dictionary.current()?.name || ''
 }}`,
               variant: 'heading2-m',
             }),
@@ -44,10 +44,10 @@ export default page({
               name: 'TextSubtitle',
               color: '#858C99',
               text: `{{
-  dictionary.getDictionary()?.description || ''
+  dictionary.current()?.description || ''
 }}`,
               visible: `{{
-  Boolean(dictionary.getDictionary()?.description)
+  Boolean(dictionary.current()?.description)
 }}`,
             }),
           ],
@@ -61,7 +61,7 @@ export default page({
               widthMode: 'hug',
               color: 'secondary',
               disabled: `{{
-  !dictionary.getDictionary()
+  !dictionary.current()
 }}`,
               onClick: `{{
   dictEdit.toggleModal()
@@ -75,7 +75,7 @@ export default page({
               widthMode: 'hug',
               color: 'secondary',
               disabled: `{{
-  !dictionary.getDictionary()
+  !dictionary.current()
 }}`,
               onClick: `{{
   dictDelete.toggleModal()
@@ -420,7 +420,7 @@ white-space: nowrap;`,
           customCss: 'overflow-wrap: anywhere;',
           color: '#161A22',
           text: `{{
-  itemModal.currentItem ? \`Редагувати "\${itemModal.currentItem.name || ''}"\` : 'Створення значення'
+  itemModal.item ? \`Редагувати "\${itemModal.item.name || ''}"\` : 'Створення значення'
 }}`,
           variant: 'heading4-sb',
         }),
@@ -431,7 +431,7 @@ white-space: nowrap;`,
           text: 'Створення значення до словника',
           variant: 'body4-r',
           visible: `{{
-  !itemModal.currentItem
+  !itemModal.item
 }}`,
         }),
         stack({ direction: 'column', widthMode: 'fill', customCss: 'flex: 1 1 auto; min-height: 0; overflow-y: auto;' }, [
@@ -445,7 +445,7 @@ white-space: nowrap;`,
           validationMessage: 'Обов\'язкове поле',
           marker: true,
           defaultValue: `{{
-  itemModal.currentItem?.name ?? ''
+  itemModal.item?.name ?? ''
 }}`,
           disabled: `{{
   itemModal.loading
@@ -457,7 +457,7 @@ white-space: nowrap;`,
           name: 'InputItemCode',
           margin: '16px 0 0',
           defaultValue: `{{
-  itemModal.currentItem?.code ?? ''
+  itemModal.item?.code ?? ''
 }}`,
           disabled: `{{
   itemModal.loading
@@ -471,7 +471,7 @@ white-space: nowrap;`,
           required: true,
           marker: true,
           defaultValue: `{{
-  itemModal.currentItem?.is_active === false ? 'inactive' : 'active'
+  itemModal.item?.is_active === false ? 'inactive' : 'active'
 }}`,
           disabled: `{{
   itemModal.loading
@@ -485,7 +485,7 @@ white-space: nowrap;`,
           name: 'InputItemDescription',
           margin: '16px 0 0',
           defaultValue: `{{
-  itemModal.currentItem?.description ?? ''
+  itemModal.item?.description ?? ''
 }}`,
           disabled: `{{
   itemModal.loading
@@ -517,7 +517,7 @@ white-space: nowrap;`,
   itemModal.onSubmit()
 }}`,
               text: `{{
-  itemModal.currentItem ? 'Зберегти' : 'Створити'
+  itemModal.item ? 'Зберегти' : 'Створити'
 }}`,
             }),
           ],
@@ -598,7 +598,7 @@ white-space: nowrap;`,
           customCss: 'overflow-wrap: anywhere;',
           color: '#161A22',
           text: `{{
-  \`Редагувати "\${dictionary.getDictionary()?.name || ''}"\`
+  \`Редагувати "\${dictionary.current()?.name || ''}"\`
 }}`,
           variant: 'heading4-sb',
         }),
@@ -613,7 +613,7 @@ white-space: nowrap;`,
           validationMessage: 'Обов\'язкове поле',
           marker: true,
           defaultValue: `{{
-  dictionary.getDictionary()?.name ?? ''
+  dictionary.current()?.name ?? ''
 }}`,
           disabled: `{{
   dictEdit.loading
@@ -625,7 +625,7 @@ white-space: nowrap;`,
           name: 'InputEditDictCode',
           margin: '16px 0 0',
           defaultValue: `{{
-  dictionary.getDictionary()?.code ?? ''
+  dictionary.current()?.code ?? ''
 }}`,
           disabled: `{{
   dictEdit.loading
@@ -639,7 +639,7 @@ white-space: nowrap;`,
           required: true,
           marker: true,
           defaultValue: `{{
-  dictionary.getDictionary()?.is_extensible ? 'yes' : 'no'
+  dictionary.current()?.is_extensible ? 'yes' : 'no'
 }}`,
           disabled: `{{
   dictEdit.loading
@@ -653,7 +653,7 @@ white-space: nowrap;`,
           name: 'InputEditDictDescription',
           margin: '16px 0 0',
           defaultValue: `{{
-  dictionary.getDictionary()?.description ?? ''
+  dictionary.current()?.description ?? ''
 }}`,
           disabled: `{{
   dictEdit.loading
@@ -706,7 +706,7 @@ white-space: nowrap;`,
           customCss: 'overflow-wrap: anywhere;',
           color: '#161A22',
           text: `{{
-  \`Видалити словник "\${dictionary.getDictionary()?.name || ''}"?\`
+  \`Видалити словник "\${dictionary.current()?.name || ''}"?\`
 }}`,
           variant: 'heading4-sb',
         }),
@@ -887,5 +887,6 @@ white-space: nowrap;`,
 }}` }
 ),
   ],
-  scripts: [script('constants', constantsCode), script('init', initCode), script('dictionary', dictionaryCode), script('breadcrumbs', breadcrumbsCode), script('items', itemsCode), script('sorting', sortingCode), script('itemModal', itemModalCode), script('deleteItem', deleteItemCode), script('dictEdit', dictEditCode), script('dictDelete', dictDeleteCode), script('filter', filterCode)],
+  init: initCode,
+  scripts: [script('constants', constantsCode), script('dictionary', dictionaryCode), script('breadcrumbs', breadcrumbsCode), script('items', itemsCode), script('sorting', sortingCode), script('itemModal', itemModalCode), script('deleteItem', deleteItemCode), script('dictEdit', dictEditCode), script('dictDelete', dictDeleteCode), script('filter', filterCode)],
 });

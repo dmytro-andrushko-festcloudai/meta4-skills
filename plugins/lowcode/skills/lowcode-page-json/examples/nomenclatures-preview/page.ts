@@ -427,5 +427,6 @@ export default page({
 }}` }
 ),
   ],
-  scripts: [script('constants', constantsCode), script('init', initCode), script('nomenclature', nomenclatureCode), script('breadcrumbs', breadcrumbsCode), script('navigation', navigationCode), script('mainInfo', mainInfoCode), script('storage', storageCode), script('regulated', regulatedCode), script('client', clientCode), script('finance', financeCode)],
+  init: initCode,
+  scripts: [script('constants', constantsCode), script('nomenclature', nomenclatureCode), script('breadcrumbs', breadcrumbsCode), script('navigation', navigationCode), script('mainInfo', mainInfoCode), script('storage', storageCode), script('regulated', regulatedCode), script('client', clientCode), script('finance', financeCode)],
 });

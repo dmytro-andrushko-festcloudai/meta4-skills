@@ -25,7 +25,7 @@ The Drawer draws its own close button in the top corner, so a title placed first
 
 ## One drawer opens another: close the first, then open the second
 
-Two open drawers stack their backdrops. Keep what the second one needs before closing: `const role = this.role; DrawerRole.setOpen(false); access.open(role);`.
+Two open drawers stack their backdrops. Keep what the second one needs before closing: `const current = role; DrawerRole.setOpen(false); access.open(current);` (`role` is the drawer file's state).
 
 ## A drawer footer always has at least one button
 

@@ -1,73 +1,71 @@
 const CLEAR_DELAY = 100;
 
-return {
-  notBlank(field) {
-    return !field?.required || Boolean(field.value?.trim());
-  },
+export const item = state(null);
+export const loading = state(false);
 
-  currentItem: null,
-  loading: false,
+export function notBlank(field) {
+  return !field?.required || Boolean(field.value?.trim());
+}
 
-  getFields() {
-    return [InputItemName, InputItemCode, RadioItemStatus, InputItemDescription];
-  },
+function getFields() {
+  return [InputItemName, InputItemCode, RadioItemStatus, InputItemDescription];
+}
 
-  toggleModal(currentItem) {
-    this.currentItem = currentItem ?? null;
-    ModalItem.setOpen(true);
-  },
+export function toggleModal(row) {
+  update(item, row ?? null);
+  ModalItem.setOpen(true);
+}
 
-  async close() {
-    ModalItem.setOpen(false);
+export async function close() {
+  ModalItem.setOpen(false);
 
-    await new Promise((resolve) => setTimeout(resolve, CLEAR_DELAY));
+  await new Promise((resolve) => setTimeout(resolve, CLEAR_DELAY));
 
-    if (ModalItem.open) return;
+  if (ModalItem.open) return;
 
-    this.getFields().forEach((field) => field?.reset());
-    this.currentItem = null;
-  },
+  getFields().forEach((field) => field?.reset());
+  update(item, null);
+}
 
-  getDisableSubmit() {
-    const fields = this.getFields();
+export function getDisableSubmit() {
+  const fields = getFields();
 
-    return fields.some((field) => !field?.valid) || !fields.some((field) => Boolean(field?.dirty));
-  },
+  return fields.some((field) => !field?.valid) || !fields.some((field) => Boolean(field?.dirty));
+}
 
-  async onSubmit() {
-    this.loading = true;
+export async function onSubmit() {
+  update(loading, true);
 
-    try {
-      const object = {
-        name: InputItemName.value?.trim(),
-        code: InputItemCode.value?.trim() || null,
-        description: InputItemDescription.value?.trim() || null,
-        is_active: RadioItemStatus.value === 'active',
-      };
+  try {
+    const object = {
+      name: InputItemName.value?.trim(),
+      code: InputItemCode.value?.trim() || null,
+      description: InputItemDescription.value?.trim() || null,
+      is_active: RadioItemStatus.value === 'active',
+    };
 
-      const isEdit = Boolean(this.currentItem);
-      const { data, error } = isEdit
-        ? await updateDictionaryItem.run({ id: this.currentItem.fcp_id, object })
-        : await createDictionaryItem.run({ object: { ...object, dictionary_fcp_id: init.id } });
+    const isEdit = Boolean(item);
+    const { data, error } = isEdit
+      ? await updateDictionaryItem.run({ id: item.fcp_id, object })
+      : await createDictionaryItem.run({ object: { ...object, dictionary_fcp_id: constants.id } });
 
-      if (error) throw new Error(error);
+    if (error) throw new Error(error);
 
-      if (!data?.item?.fcp_id) {
-        throw new Error(isEdit ? 'Не вдалося оновити значення' : 'Не вдалося створити значення');
-      }
-
-      app.showAlert(
-        isEdit ? `Значення "${data.item.name}" успішно збережено` : `Значення "${data.item.name}" успішно створено`,
-        'success'
-      );
-
-      this.close();
-
-      await items.getData();
-    } catch (error) {
-      app.showAlert(error?.message || 'Не вдалося зберегти значення', 'error');
-    } finally {
-      this.loading = false;
+    if (!data?.item?.fcp_id) {
+      throw new Error(isEdit ? 'Не вдалося оновити значення' : 'Не вдалося створити значення');
     }
-  },
-};
+
+    app.showAlert(
+      isEdit ? `Значення "${data.item.name}" успішно збережено` : `Значення "${data.item.name}" успішно створено`,
+      'success'
+    );
+
+    close();
+
+    await items.getData();
+  } catch (error) {
+    app.showAlert(error?.message || 'Не вдалося зберегти значення', 'error');
+  } finally {
+    update(loading, false);
+  }
+}

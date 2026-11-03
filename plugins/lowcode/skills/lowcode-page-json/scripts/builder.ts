@@ -131,6 +131,7 @@ export const script = (name: string, code: string, folder?: string): Script & { 
 
 export const page = (parts: {
   content: Node[];
+  init?: string;
   modules?: Module[];
   queries?: Array<Query & { id: string }>;
   scripts?: Array<Script & { id: string }>;
@@ -140,6 +141,7 @@ export const page = (parts: {
       queries: parts.queries ?? [],
       modules: parts.modules ?? [],
       scripts: parts.scripts ?? [],
+      ...(parts.init?.trim() ? { init: parts.init } : {}),
       ...(folderIds.size > 0 ? { folders: [...folderIds].map(([name, id]) => ({ id, name })) } : {}),
     },
   },

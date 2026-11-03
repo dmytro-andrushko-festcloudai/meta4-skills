@@ -1,94 +1,102 @@
-return {
-  isSubmitting: false,
+export const isSubmitting = state(false);
 
-  getItem() {
-    return getNomenclature.data?.nomenclatures?.[0] || null;
-  },
+export function getItem() {
+  return getNomenclature.data?.nomenclatures?.[0] || null;
+}
 
-  notBlank(field) {
-    return !field?.required || Boolean(field.value?.trim());
-  },
+export async function load() {
+  if (!constants.id) return;
 
-  getFields() {
-    return [
-      InputName,
-      InputManufacturer,
-      InputCountry,
-      SelectUnit,
-      InputShelfLife,
-      InputTemperatureFrom,
-      InputTemperatureTo,
-      SelectUktzed,
-      SelectVatRate,
-      InputVatRelief,
-      CheckboxExcise,
-      InputKind,
-      InputPosKind,
-      InputFoodCost,
-      SelectType,
-      InputManager,
-      CheckboxOwnProduction,
-      SelectTaxBenefit,
-    ];
-  },
+  const { error } = await getNomenclature.run({ id: constants.id });
 
-  isSubmitDisabled() {
-    const fields = this.getFields();
-    const isInvalid = fields.some((field) => !field?.valid);
+  if (error) {
+    app.showAlert(error, 'error');
+  }
+}
 
-    if (!init.id) return isInvalid;
+export function notBlank(field) {
+  return !field?.required || Boolean(field.value?.trim());
+}
 
-    return isInvalid || !fields.some((field) => Boolean(field?.dirty));
-  },
+function getFields() {
+  return [
+    InputName,
+    InputManufacturer,
+    InputCountry,
+    SelectUnit,
+    InputShelfLife,
+    InputTemperatureFrom,
+    InputTemperatureTo,
+    SelectUktzed,
+    SelectVatRate,
+    InputVatRelief,
+    CheckboxExcise,
+    InputKind,
+    InputPosKind,
+    InputFoodCost,
+    SelectType,
+    InputManager,
+    CheckboxOwnProduction,
+    SelectTaxBenefit,
+  ];
+}
 
-  getObject() {
-    const text = (field) => String(field.value ?? '').trim() || null;
+export function isSubmitDisabled() {
+  const fields = getFields();
+  const isInvalid = fields.some((field) => !field?.valid);
 
-    return {
-      name: text(InputName),
-      manufacturer_name: text(InputManufacturer),
-      country_of_origin: text(InputCountry),
-      unit_of_measure_fcp_id: text(SelectUnit),
-      shelf_life: text(InputShelfLife),
-      storing_temperature_from: text(InputTemperatureFrom),
-      storing_temperature_to: text(InputTemperatureTo),
-      code_uktzed_fcp_id: text(SelectUktzed),
-      vat_rate: text(SelectVatRate),
-      vat_relief: text(InputVatRelief),
-      excise_applicable: Boolean(CheckboxExcise.value),
-      nomenclature_kind: text(InputKind),
-      pos_nomenclature_kind: text(InputPosKind),
-      food_cost_type: text(InputFoodCost),
-      nomenclature_type_fcp_id: text(SelectType),
-      responsible_manager: text(InputManager),
-      own_production: Boolean(CheckboxOwnProduction.value),
-      tax_benefit_code: text(SelectTaxBenefit),
-    };
-  },
+  if (!constants.id) return isInvalid;
 
-  async onSubmit() {
-    this.isSubmitting = true;
+  return isInvalid || !fields.some((field) => Boolean(field?.dirty));
+}
 
-    try {
-      const object = this.getObject();
-      const { data, error } = init.id
-        ? await updateNomenclature.run({ id: init.id, object })
-        : await createNomenclature.run({ object });
+function getObject() {
+  const text = (field) => String(field.value ?? '').trim() || null;
 
-      if (error) throw new Error(error);
+  return {
+    name: text(InputName),
+    manufacturer_name: text(InputManufacturer),
+    country_of_origin: text(InputCountry),
+    unit_of_measure_fcp_id: text(SelectUnit),
+    shelf_life: text(InputShelfLife),
+    storing_temperature_from: text(InputTemperatureFrom),
+    storing_temperature_to: text(InputTemperatureTo),
+    code_uktzed_fcp_id: text(SelectUktzed),
+    vat_rate: text(SelectVatRate),
+    vat_relief: text(InputVatRelief),
+    excise_applicable: Boolean(CheckboxExcise.value),
+    nomenclature_kind: text(InputKind),
+    pos_nomenclature_kind: text(InputPosKind),
+    food_cost_type: text(InputFoodCost),
+    nomenclature_type_fcp_id: text(SelectType),
+    responsible_manager: text(InputManager),
+    own_production: Boolean(CheckboxOwnProduction.value),
+    tax_benefit_code: text(SelectTaxBenefit),
+  };
+}
 
-      const id = data?.nomenclature?.fcp_id;
+export async function onSubmit() {
+  update(isSubmitting, true);
 
-      if (!id) {
-        throw new Error(init.id ? 'Не вдалося оновити товар' : 'Не вдалося створити товар');
-      }
+  try {
+    const object = getObject();
+    const { data, error } = constants.id
+      ? await updateNomenclature.run({ id: constants.id, object })
+      : await createNomenclature.run({ object });
 
-      app.showAlert(init.id ? 'Товар успішно оновлено' : 'Товар успішно створено', 'success');
-      app.navigate(init.id ? `${constants.basePath}/${id}` : `${constants.basePath}/${id}?from=create`);
-    } catch (error) {
-      app.showAlert(error?.message || 'Не вдалося зберегти товар', 'error');
-    } finally {
-      this.isSubmitting = false;
+    if (error) throw new Error(error);
+
+    const id = data?.nomenclature?.fcp_id;
+
+    if (!id) {
+      throw new Error(constants.id ? 'Не вдалося оновити товар' : 'Не вдалося створити товар');
     }
-  },
-};
+
+    app.showAlert(constants.id ? 'Товар успішно оновлено' : 'Товар успішно створено', 'success');
+    app.navigate(constants.id ? `${constants.basePath}/${id}` : `${constants.basePath}/${id}?from=create`);
+  } catch (error) {
+    app.showAlert(error?.message || 'Не вдалося зберегти товар', 'error');
+  } finally {
+    update(isSubmitting, false);
+  }
+}

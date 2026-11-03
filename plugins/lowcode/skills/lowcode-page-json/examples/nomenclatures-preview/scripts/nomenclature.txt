@@ -1,23 +1,31 @@
-return {
-  getItem() {
-    return getNomenclature.data?.nomenclatures?.[0] || null;
-  },
+export function getItem() {
+  return getNomenclature.data?.nomenclatures?.[0] || null;
+}
 
-  text(value) {
-    if (value === null || value === undefined) return '—';
+export async function load() {
+  if (!constants.id) return;
 
-    return String(value).trim() || '—';
-  },
+  const { error } = await getNomenclature.run({ id: constants.id });
 
-  yesNo(value) {
-    if (value === null || value === undefined) return '—';
+  if (error) {
+    app.showAlert(error, 'error');
+  }
+}
 
-    return value ? 'Так' : 'Ні';
-  },
+export function text(value) {
+  if (value === null || value === undefined) return '—';
 
-  temperature(value) {
-    const text = this.text(value);
+  return String(value).trim() || '—';
+}
 
-    return /^[-+]?\d+([.,]\d+)?$/.test(text) ? `${text} (°C)` : text;
-  },
-};
+export function yesNo(value) {
+  if (value === null || value === undefined) return '—';
+
+  return value ? 'Так' : 'Ні';
+}
+
+export function temperature(value) {
+  const formatted = text(value);
+
+  return /^[-+]?\d+([.,]\d+)?$/.test(formatted) ? `${formatted} (°C)` : formatted;
+}

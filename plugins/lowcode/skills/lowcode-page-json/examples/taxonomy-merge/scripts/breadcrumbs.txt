@@ -1,18 +1,16 @@
-return {
-  getBreadcrumbs() {
-    return [
-      { id: 'home', label: 'Менеджер таксономії' },
-      { id: 'merge', label: 'Об’єднання таксономії' },
-    ];
-  },
+export function getBreadcrumbs() {
+  return [
+    { id: 'home', label: 'Менеджер таксономії' },
+    { id: 'merge', label: 'Об’єднання таксономії' },
+  ];
+}
 
-  onNavigate(id) {
-    if (id === 'home') {
-      app.navigate(constants.basePath);
-    }
-  },
-
-  onBack() {
+export function onNavigate(id) {
+  if (id === 'home') {
     app.navigate(constants.basePath);
-  },
-};
+  }
+}
+
+export function onBack() {
+  app.navigate(constants.basePath);
+}

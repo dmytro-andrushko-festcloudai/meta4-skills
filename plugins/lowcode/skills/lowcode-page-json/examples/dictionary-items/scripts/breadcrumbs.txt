@@ -1,14 +1,12 @@
-return {
-  getBreadcrumbs() {
-    return [
-      { id: 'home', label: 'Реєстр Словників' },
-      { id: 'current', label: dictionary.getDictionary()?.name || (getDictionary.loading ? 'Завантаження...' : '') },
-    ];
-  },
+export function getBreadcrumbs() {
+  return [
+    { id: 'home', label: 'Реєстр Словників' },
+    { id: 'current', label: dictionary.current()?.name || (getDictionary.loading ? 'Завантаження...' : '') },
+  ];
+}
 
-  onNavigate(id) {
-    if (id === 'home') {
-      dictionary.goToList();
-    }
-  },
-};
+export function onNavigate(id) {
+  if (id === 'home') {
+    dictionary.goToList();
+  }
+}

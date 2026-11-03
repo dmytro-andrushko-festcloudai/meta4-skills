@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 import { analyzeCode, compileFailure } from '../../../../apps/lowcode/src/engine/core/eval/compile';
+import { analyzeScriptFile } from '../../../../apps/lowcode/src/engine/core/script-file';
 import { blocks, shapeOf } from '../../../../apps/lowcode/src/runtime/registry/blocks';
 import { shapeInfo, slotsOf } from '../../../../apps/lowcode/src/runtime/shape-info';
 
@@ -179,10 +180,35 @@ data.content.forEach((n: PageNode) => visit(n, 'content'));
 
 const root = data.root?.props ?? {};
 
+const FILE_MODE = /^\s*export\s|\bstate\(/m;
+const isFileMode = (code: string) => FILE_MODE.test(code);
+
 for (const s of root.scripts ?? []) {
+  if (isFileMode(s.code)) {
+    const analysis = analyzeScriptFile(s.code);
+
+    if ('message' in analysis) problems.push(`script ${s.name}: ${JSON.stringify(analysis)}`);
+
+    continue;
+  }
+
+  if (/\bthis\./.test(s.code) || /^ {2}(async\s+)?\w+\([^)]*\)\s*\{/m.test(s.code)) {
+    problems.push(`script ${s.name}: old return-object script with methods; write it as export const x = state(...) and export function (references/scripts-and-queries.md)`);
+  }
+
   const failure = compileFailure(s.code, 'statement', { async: false });
 
   if (failure) problems.push(`script ${s.name}: ${JSON.stringify(failure)}`);
+}
+
+if (typeof root.init === 'string' && root.init.trim()) {
+  const failure = compileFailure(root.init, 'statement', {});
+
+  if (failure) problems.push(`init: ${JSON.stringify(failure)}`);
+}
+
+if ((root.scripts ?? []).some((s: { name: string }) => s.name === 'init')) {
+  problems.push('script init: the entry point is root.props.init (page({ init })), not a js file named init');
 }
 
 for (const m of root.modules ?? []) {
@@ -203,10 +229,11 @@ const defined = new Set<string>([
   ...(root.queries ?? []).map((q: { name: string }) => q.name),
   ...(root.modules ?? []).map((m: { name: string }) => m.name),
 ]);
+const RESERVED_NAMES = new Set(['app', 'currentIndex', 'currentItem', 'inputs', 'params', 'parent', 'self', 'top']);
 const blockPrefix = new RegExp(`^(${Object.keys(blocks).join('|')})[A-Za-z0-9]*$`);
 const queryCall = /\b([A-Za-z_]\w*)\.(?:run|data|loading|error)\b/g;
 // Names the engine provides to every expression and js file, besides the page's own blocks, queries and js files.
-const SCOPE_NAMES = new Set(['app', 'computed', 'currentIndex', 'currentItem', 'effect', 'inputs', 'params', 'signal']);
+const SCOPE_NAMES = new Set(['app', 'computed', 'currentIndex', 'currentItem', 'effect', 'inputs', 'params', 'signal', 'state', 'update']);
 const blockCall =
   /\b([A-Z]\w*)\.(?:value|values|setValue|setValues|reset|valid|dirty|page|pageSize|setPage|open|setOpen|selectedValue|setSelectedValue|selectedRow)\b/g;
 
@@ -244,7 +271,31 @@ const scan = (value: unknown, where: string, key = '') => {
 
 scan(data.content, 'content');
 
-for (const s of root.scripts ?? []) checkReferences(s.code, `script ${s.name}`, 'statement');
+for (const s of root.scripts ?? []) {
+  if (!isFileMode(s.code)) {
+    checkReferences(s.code, `script ${s.name}`, 'statement');
+
+    continue;
+  }
+
+  const analysis = analyzeScriptFile(s.code);
+
+  if ('refs' in analysis) {
+    for (const name of analysis.refs) {
+      if (!SCOPE_NAMES.has(name) && !defined.has(name)) problems.push(`script ${s.name}: "${name}" is not defined on this page`);
+    }
+
+    for (const name of analysis.declared) {
+      const taken = [...referenced, ...(root.queries ?? []).map((q: { name: string }) => q.name)].includes(name);
+
+      if (taken || RESERVED_NAMES.has(name)) problems.push(`script ${s.name}: declares "${name}", a name the page or the engine already uses; rename it`);
+    }
+
+    for (const shadow of analysis.shadows) problems.push(`script ${s.name}: assignment to "${shadow.name}" lands on a local that hides a script variable`);
+  }
+}
+
+if (typeof root.init === 'string' && root.init.trim()) checkReferences(root.init, 'init', 'statement');
 
 for (const q of root.queries ?? []) {
   for (const field of ['endpoint', 'headers', 'variables', 'url', 'body']) scan(q[field], `query ${q.name}.${field}`);

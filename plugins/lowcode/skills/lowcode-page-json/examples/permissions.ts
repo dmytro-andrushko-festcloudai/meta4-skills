@@ -1,9 +1,7 @@
 import { button, graphqlQuery, page, script, stack, text } from '../scripts/builder';
 import permissionsScript from './permissions.script.txt';
 
-const constantsScript = `return {
-  GRAPHQL_URL: 'https://hasura-qa.srv.festcloud.ai/v1/graphql',
-};`;
+const constantsScript = `export const GRAPHQL_URL = 'https://hasura-qa.srv.festcloud.ai/v1/graphql';`;
 
 const getPermissions = graphqlQuery(
   'getPermissions',

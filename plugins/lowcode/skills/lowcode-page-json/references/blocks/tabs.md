@@ -32,7 +32,7 @@ This applies to a search in the same row as a `Tabs`: beside it in a row Stack (
 
 ## A search shared by several tabs must work on every tab
 
-If one `SearchInput` sits above tabs that show different data (a server-loaded "all" tab and a client-side "selected" tab), each tab's rows must honour it, or the input must be hidden on the tab where it does nothing (`visible: "{{ !drawer.isRights() }}"`). A server query is re-run only for the tab it feeds (`if (this.tab === 'all') await this.load()`), while the other tab filters its rows in the script by the same terms. The empty state, the pagination condition and the empty hint then use the filtered rows, not the raw count.
+If one `SearchInput` sits above tabs that show different data (a server-loaded "all" tab and a client-side "selected" tab), each tab's rows must honour it, or the input must be hidden on the tab where it does nothing (`visible: "{{ !drawer.isRights() }}"`). A server query is re-run only for the tab it feeds (`if (tab === 'all') await load()`), while the other tab filters its rows in the js file by the same terms. The empty state, the pagination condition and the empty hint then use the filtered rows, not the raw count.
 
 ## Tabs in a white panel
 

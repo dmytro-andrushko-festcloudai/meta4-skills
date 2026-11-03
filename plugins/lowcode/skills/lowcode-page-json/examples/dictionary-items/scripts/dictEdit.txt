@@ -1,64 +1,62 @@
 const CLEAR_DELAY = 100;
 
-return {
-  notBlank(field) {
-    return !field?.required || Boolean(field.value?.trim());
-  },
+export const loading = state(false);
 
-  loading: false,
+export function notBlank(field) {
+  return !field?.required || Boolean(field.value?.trim());
+}
 
-  getFields() {
-    return [InputEditDictName, InputEditDictCode, RadioEditDictExtensible, InputEditDictDescription];
-  },
+function getFields() {
+  return [InputEditDictName, InputEditDictCode, RadioEditDictExtensible, InputEditDictDescription];
+}
 
-  toggleModal() {
-    ModalEditDictionary.setOpen(true);
-  },
+export function toggleModal() {
+  ModalEditDictionary.setOpen(true);
+}
 
-  async close() {
-    ModalEditDictionary.setOpen(false);
+export async function close() {
+  ModalEditDictionary.setOpen(false);
 
-    await new Promise((resolve) => setTimeout(resolve, CLEAR_DELAY));
+  await new Promise((resolve) => setTimeout(resolve, CLEAR_DELAY));
 
-    if (ModalEditDictionary.open) return;
+  if (ModalEditDictionary.open) return;
 
-    this.getFields().forEach((field) => field?.reset());
-  },
+  getFields().forEach((field) => field?.reset());
+}
 
-  getDisableSubmit() {
-    const fields = this.getFields();
+export function getDisableSubmit() {
+  const fields = getFields();
 
-    return fields.some((field) => !field?.valid) || !fields.some((field) => Boolean(field?.dirty));
-  },
+  return fields.some((field) => !field?.valid) || !fields.some((field) => Boolean(field?.dirty));
+}
 
-  async onSubmit() {
-    this.loading = true;
+export async function onSubmit() {
+  update(loading, true);
 
-    try {
-      const object = {
-        name: InputEditDictName.value?.trim(),
-        code: InputEditDictCode.value?.trim() || null,
-        description: InputEditDictDescription.value?.trim() || null,
-        is_extensible: RadioEditDictExtensible.value === 'yes',
-      };
+  try {
+    const object = {
+      name: InputEditDictName.value?.trim(),
+      code: InputEditDictCode.value?.trim() || null,
+      description: InputEditDictDescription.value?.trim() || null,
+      is_extensible: RadioEditDictExtensible.value === 'yes',
+    };
 
-      const { data, error } = await updateDictionary.run({ id: init.id, object });
+    const { data, error } = await updateDictionary.run({ id: constants.id, object });
 
-      if (error) throw new Error(error);
+    if (error) throw new Error(error);
 
-      if (!data?.dictionary?.fcp_id) {
-        throw new Error('Не вдалося оновити словник');
-      }
-
-      app.showAlert(`Словник "${data.dictionary.name}" успішно збережено`, 'success');
-
-      this.close();
-
-      await dictionary.reload();
-    } catch (error) {
-      app.showAlert(error?.message || 'Не вдалося оновити словник', 'error');
-    } finally {
-      this.loading = false;
+    if (!data?.dictionary?.fcp_id) {
+      throw new Error('Не вдалося оновити словник');
     }
-  },
-};
+
+    app.showAlert(`Словник "${data.dictionary.name}" успішно збережено`, 'success');
+
+    close();
+
+    await dictionary.reload();
+  } catch (error) {
+    app.showAlert(error?.message || 'Не вдалося оновити словник', 'error');
+  } finally {
+    update(loading, false);
+  }
+}

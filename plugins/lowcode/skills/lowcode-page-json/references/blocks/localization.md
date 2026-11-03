@@ -3,7 +3,7 @@
 Translations with `app.libraries.i18n`, called through a short page-level `i18n` js file. Reference implementations: the taxonomies pages (`apps/lowcode/src/pages/taxonomies/schemas/list.json` and `merge.json`) and `app-info`.
 
 Older layouts are superseded; convert them when you touch such a page (see "Converting an older page"):
-- flat locale files registered by `init`, every call spelled `app.libraries.i18n.t(...)` (the dictionaries and uom pages before conversion);
+- flat locale files registered by an entry js file's `init(...)` call, every call spelled `app.libraries.i18n.t(...)` (the dictionaries and uom pages before conversion);
 - a `translations` script plus an `i18n` wrapper (security-service pages at commit `5e924080c`).
 
 ## Ask first
@@ -21,7 +21,7 @@ Before planning a page, ask the user whether it should be localised. Default to 
 
 Lookup order for a key: the plural key (`key_few`, when `count` is passed), then the key itself, in the user's language, then in the next language; when nothing matches, the key itself is returned. The lookup is flat only: `t` reads `dictionary['common.cancel']` and **does not walk nested objects**, so a nested dictionary passed to `init` as is renders every key as its raw name. That is why the `i18n` js file flattens the locale files first. The language is `app.user.locale` (`'en'` or `'uk'`). Dates: `app.libraries.dayjs`.
 
-`t` reads signals, so a binding that calls it re-renders when `init` sets the dictionaries or the user switches language.
+`t` reads signals, so a binding that calls it re-renders when `i18n.init` sets the dictionaries or the user switches language.
 
 ## Js files
 
@@ -83,7 +83,7 @@ Everything else calls `i18n.t(...)`:
 - bindings: `{{ i18n.t('page.title') }}`, `{{ i18n.t('tree.nodesCount', { count: tree.getCount() }) }}`;
 - scripts: `i18n.t('createForm.created', { name })`, or `const { t } = i18n;` at the top of a function that translates many strings.
 
-The page's `init` js file does not register dictionaries; it only loads data.
+The page `init` (`root.props.init`) does not register dictionaries; it only starts loading data (`references/script-files.md`). The locale files and `i18n` are plain scripts: they return an object and need no `export`.
 
 ## Key layout
 
@@ -122,7 +122,7 @@ Edit the page JSON in place, so block, folder, script and query ids stay the sam
 
 1. Map every old flat key to its new path (`createTitle` → `createForm.title`, `stateCatalog` → `states.catalog`), plural bases included.
 2. Rewrite `localeUk` and `localeEn` as nested objects from that map, values unchanged.
-3. Add the `i18n` js file (with `flatten`, as above) to the `localization` folder after the locale files; remove the `init(...)` line from the entry js file. The `i18n` js file must come before the entry js file in the scripts list.
+3. Add the `i18n` js file (with `flatten`, as above) to the `localization` folder after the locale files; remove the `i18n.init(...)` line from the entry js file. The `i18n` js file must come before the entry js file in the scripts list.
 4. Replace `app.libraries.i18n.t(` with `i18n.t(` everywhere and each key with its new path, including `labelKey`s and keys passed with `count`.
 5. Drop a `Js` suffix from js file names in the same pass (`references/scripts-and-queries.md`, "Renaming a js file or a query"). A reference inside a binding can follow a `\n` escape in the raw JSON text (`"{{\ntreeJs.get()}}"`), so a word-boundary regex over the raw JSON misses it; `validate` reports what was missed.
 

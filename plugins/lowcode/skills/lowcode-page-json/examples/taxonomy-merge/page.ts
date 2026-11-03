@@ -299,5 +299,6 @@ overflow: auto;`,
 }}` }
 ),
   ],
-  scripts: [script('constants', constantsCode), script('init', initCode), script('breadcrumbs', breadcrumbsCode), script('tree', treeCode), script('merge', mergeCode), script('preview', previewCode)],
+  init: initCode,
+  scripts: [script('constants', constantsCode), script('breadcrumbs', breadcrumbsCode), script('tree', treeCode), script('merge', mergeCode), script('preview', previewCode)],
 });

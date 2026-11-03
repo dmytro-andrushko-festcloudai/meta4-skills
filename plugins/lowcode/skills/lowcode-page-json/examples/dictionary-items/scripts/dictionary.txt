@@ -1,19 +1,31 @@
-return {
-  getDictionary() {
-    return getDictionary.data?.dictionaries?.[0] || null;
-  },
+export function current() {
+  return getDictionary.data?.dictionaries?.[0] || null;
+}
 
-  canAddItems() {
-    return Boolean(this.getDictionary()?.is_extensible);
-  },
+export function canAddItems() {
+  return Boolean(current()?.is_extensible);
+}
 
-  goToList() {
-    app.navigate(constants.basePath);
-  },
+export function goToList() {
+  app.navigate(constants.basePath);
+}
 
-  async reload() {
-    const { error } = await getDictionary.run({ id: init.id });
+export async function load() {
+  if (!constants.id) return;
 
-    if (error) app.showAlert(error, 'error');
-  },
-};
+  const { error } = await getDictionary.run({ id: constants.id });
+
+  if (error) {
+    app.showAlert(error, 'error');
+
+    return;
+  }
+
+  await items.getData();
+}
+
+export async function reload() {
+  const { error } = await getDictionary.run({ id: constants.id });
+
+  if (error) app.showAlert(error, 'error');
+}

@@ -1,106 +1,104 @@
-return {
-  selectedFilters: { names: [], manufacturers: [], countries: [] },
+export const selectedFilters = state({ names: [], manufacturers: [], countries: [] });
 
-  widgetsOf(id) {
-    const groups = { name: CheckboxGroupName, manufacturer: CheckboxGroupManufacturer, country: CheckboxGroupCountry };
-    const searches = { name: InputFilterName, manufacturer: InputFilterManufacturer, country: InputFilterCountry };
+function widgetsOf(id) {
+  const groups = { name: CheckboxGroupName, manufacturer: CheckboxGroupManufacturer, country: CheckboxGroupCountry };
+  const searches = { name: InputFilterName, manufacturer: InputFilterManufacturer, country: InputFilterCountry };
 
-    return { group: groups[id], search: searches[id] };
-  },
+  return { group: groups[id], search: searches[id] };
+}
 
-  getSearchVariables() {
-    const toPattern = (input) => `%${input.value?.trim() || ''}%`;
+export function getSearchVariables() {
+  const toPattern = (input) => `%${input.value?.trim() || ''}%`;
 
-    return {
-      nameSearch: toPattern(InputFilterName),
-      manufacturerSearch: toPattern(InputFilterManufacturer),
-      countrySearch: toPattern(InputFilterCountry),
-    };
-  },
+  return {
+    nameSearch: toPattern(InputFilterName),
+    manufacturerSearch: toPattern(InputFilterManufacturer),
+    countrySearch: toPattern(InputFilterCountry),
+  };
+}
 
-  toOptions(rows, key) {
-    return (rows || [])
-      .filter((row) => row[key]?.trim())
-      .map((row) => ({ value: row[key], label: row[key].trim() }));
-  },
+function toOptions(rows, key) {
+  return (rows || [])
+    .filter((row) => row[key]?.trim())
+    .map((row) => ({ value: row[key], label: row[key].trim() }));
+}
 
-  getNameOptions() {
-    return this.toOptions(getFilters.data?.names, 'name');
-  },
+export function getNameOptions() {
+  return toOptions(getFilters.data?.names, 'name');
+}
 
-  getManufacturerOptions() {
-    return this.toOptions(getFilters.data?.manufacturers, 'manufacturer_name');
-  },
+export function getManufacturerOptions() {
+  return toOptions(getFilters.data?.manufacturers, 'manufacturer_name');
+}
 
-  getCountryOptions() {
-    return this.toOptions(getFilters.data?.countries, 'country_of_origin');
-  },
+export function getCountryOptions() {
+  return toOptions(getFilters.data?.countries, 'country_of_origin');
+}
 
-  onSearch() {
+export function onSearch() {
+  getFilters.run();
+}
+
+function getDraft() {
+  return {
+    names: CheckboxGroupName.values || [],
+    manufacturers: CheckboxGroupManufacturer.values || [],
+    countries: CheckboxGroupCountry.values || [],
+  };
+}
+
+export function onClose() {
+  CheckboxGroupName.setValues(selectedFilters.names);
+  CheckboxGroupManufacturer.setValues(selectedFilters.manufacturers);
+  CheckboxGroupCountry.setValues(selectedFilters.countries);
+}
+
+export function onApply() {
+  update(selectedFilters, getDraft());
+
+  table.getData();
+}
+
+export function onClearCategory(id) {
+  const { group, search } = widgetsOf(id);
+
+  group?.reset();
+
+  if (search?.value) {
+    search.setValue('');
     getFilters.run();
-  },
+  }
+}
 
-  getDraft() {
-    return {
-      names: CheckboxGroupName.values || [],
-      manufacturers: CheckboxGroupManufacturer.values || [],
-      countries: CheckboxGroupCountry.values || [],
-    };
-  },
+export function onClear() {
+  ['name', 'manufacturer', 'country'].forEach(onClearCategory);
+}
 
-  onClose() {
-    CheckboxGroupName.setValues(this.selectedFilters.names);
-    CheckboxGroupManufacturer.setValues(this.selectedFilters.manufacturers);
-    CheckboxGroupCountry.setValues(this.selectedFilters.countries);
-  },
+export function onQuickClear() {
+  onClear();
 
-  onApply() {
-    this.selectedFilters = this.getDraft();
+  update(selectedFilters, { names: [], manufacturers: [], countries: [] });
 
-    table.getData();
-  },
+  table.getData();
+}
 
-  onClearCategory(id) {
-    const { group, search } = this.widgetsOf(id);
+export function isActive() {
+  return Object.values(selectedFilters).some((values) => values.length > 0);
+}
 
-    group?.reset();
+export function selectedQty() {
+  const total = Object.values(selectedFilters).reduce((sum, values) => sum + values.length, 0);
 
-    if (search?.value) {
-      search.setValue('');
-      getFilters.run();
-    }
-  },
+  return total > 99 ? '99+' : total;
+}
 
-  onClear() {
-    ['name', 'manufacturer', 'country'].forEach((id) => this.onClearCategory(id));
-  },
+export function isEmpty() {
+  return Object.values(getDraft()).every((values) => values.length === 0);
+}
 
-  onQuickClear() {
-    this.onClear();
+export function isChanged() {
+  const draft = getDraft();
+  const isSame = (a, b) => a.length === b.length && a.every((value) => b.includes(value));
 
-    this.selectedFilters = { names: [], manufacturers: [], countries: [] };
-
-    table.getData();
-  },
-
-  isActive() {
-    return Object.values(this.selectedFilters).some((values) => values.length > 0);
-  },
-
-  selectedQty() {
-    const total = Object.values(this.selectedFilters).reduce((sum, values) => sum + values.length, 0);
-
-    return total > 99 ? '99+' : total;
-  },
-
-  isEmpty() {
-    return Object.values(this.getDraft()).every((values) => values.length === 0);
-  },
-
-  isChanged() {
-    const draft = this.getDraft();
-    const isSame = (a, b) => a.length === b.length && a.every((value) => b.includes(value));
-
-    return Object.keys(this.selectedFilters).some((key) => !isSame(draft[key], this.selectedFilters[key]));
-  },
-};
+  return Object.keys(selectedFilters).some((key) => !isSame(draft[key], selectedFilters[key]));
+}

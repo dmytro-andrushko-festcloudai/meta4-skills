@@ -1,53 +1,51 @@
 const CLEAR_DELAY = 100;
 
-return {
-  currentItem: null,
-  loading: false,
+export const item = state(null);
+export const loading = state(false);
 
-  toggleModal(currentItem) {
-    this.currentItem = currentItem;
-    ModalDeleteItem.setOpen(true);
-  },
+export function toggleModal(row) {
+  update(item, row);
+  ModalDeleteItem.setOpen(true);
+}
 
-  async close() {
-    ModalDeleteItem.setOpen(false);
+export async function close() {
+  ModalDeleteItem.setOpen(false);
 
-    await new Promise((resolve) => setTimeout(resolve, CLEAR_DELAY));
+  await new Promise((resolve) => setTimeout(resolve, CLEAR_DELAY));
 
-    if (ModalDeleteItem.open) return;
+  if (ModalDeleteItem.open) return;
 
-    this.currentItem = null;
-  },
+  update(item, null);
+}
 
-  getLabel() {
-    return this.currentItem?.name || '';
-  },
+export function getLabel() {
+  return item?.name || '';
+}
 
-  getDescription() {
-    return `Значення "${this.getLabel()}" буде видалено назавжди. Його не можна буде відновити`;
-  },
+export function getDescription() {
+  return `Значення "${getLabel()}" буде видалено назавжди. Його не можна буде відновити`;
+}
 
-  async onSubmit() {
-    this.loading = true;
+export async function onSubmit() {
+  update(loading, true);
 
-    try {
-      const { data, error } = await deleteDictionaryItem.run({ id: this.currentItem?.fcp_id });
+  try {
+    const { data, error } = await deleteDictionaryItem.run({ id: item?.fcp_id });
 
-      if (error) throw new Error(error);
+    if (error) throw new Error(error);
 
-      if (!data?.item?.fcp_id) {
-        throw new Error('Не вдалося видалити значення');
-      }
-
-      app.showAlert('Значення успішно видалено', 'success');
-
-      this.close();
-
-      await getDictionaryItems.run();
-    } catch (error) {
-      app.showAlert(error?.message || 'Не вдалося видалити значення', 'error');
-    } finally {
-      this.loading = false;
+    if (!data?.item?.fcp_id) {
+      throw new Error('Не вдалося видалити значення');
     }
-  },
-};
+
+    app.showAlert('Значення успішно видалено', 'success');
+
+    close();
+
+    await getDictionaryItems.run();
+  } catch (error) {
+    app.showAlert(error?.message || 'Не вдалося видалити значення', 'error');
+  } finally {
+    update(loading, false);
+  }
+}

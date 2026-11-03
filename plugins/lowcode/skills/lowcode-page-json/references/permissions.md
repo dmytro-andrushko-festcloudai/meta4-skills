@@ -58,27 +58,25 @@ const EDIT_ROLE_REQUIREMENTS = ['role_edit', 'permission_edit'];
 const DELETE_ROLE_REQUIREMENTS = ['role_admin', 'permission_admin'];
 const REMOVE_CONDITIONS_REQUIREMENTS = ['permission_admin'];
 
-return {
-  canEditRole() {
-    return app.hasPermission(EDIT_ROLE_REQUIREMENTS);
-  },
+export function canEditRole() {
+  return app.hasPermission(EDIT_ROLE_REQUIREMENTS);
+}
 
-  canDeleteRole() {
-    return app.hasPermission(DELETE_ROLE_REQUIREMENTS);
-  },
+export function canDeleteRole() {
+  return app.hasPermission(DELETE_ROLE_REQUIREMENTS);
+}
 
-  canRemoveRole(role) {
-    return this.canDeleteRole() && (!role?.field || app.hasPermission(REMOVE_CONDITIONS_REQUIREMENTS));
-  },
-};
+export function canRemoveRole(role) {
+  return canDeleteRole() && (!role?.field || app.hasPermission(REMOVE_CONDITIONS_REQUIREMENTS));
+}
 ```
 
-- A capability whose requirement depends on the row (`canRemoveRole(role)`: a role with a workgroup condition also needs `permission_admin`) takes the row as an argument; keep it a method of the same script.
+- A capability whose requirement depends on the row (`canRemoveRole(role)`: a role with a workgroup condition also needs `permission_admin`) takes the row as an argument; keep it an exported function of the same js file.
 - Gate by binding. `visible: "{{ permissions.canEditRole() }}"` for things that should not appear; combine with an existing condition as `{{ <existing> && permissions.canEditRole() }}`. Use `disabled: "{{ !permissions.canEditRole() }}"` only for things that should show but not act.
 - A row menu: `getRowActions(role)` returns the items filtered with `permissions.canX()`, and the menu block's `visible` is `{{ table.getRowActions(currentItem).length > 0 }}`.
 - Give the script no comments. State the source of each requirement in the report.
 
-`examples/permissions.ts` shows an older variant that fetches `getPermissions` and denies until it returns, with a `can(action)` dispatcher. Use it only when `app.hasPermission` is not available, and prefer the shape above.
+`examples/permissions.ts` shows an older variant that fetches `getPermissions` and denies until it returns, with an exported `can(action)` dispatcher. Use it only when `app.hasPermission` is not available, and prefer the shape above.
 
 ## Verify
 
@@ -99,7 +97,7 @@ How to build it (reference: `apps/lowcode/src/pages/banks/schemas/form.json`, `l
 - Keep the breadcrumbs and the title row as they are. The Save button already has `visible: {{ permissions.canEdit() }}`.
 - Set `visible: {{ permissions.canEdit() }}` on every top-level card or section of the form (not on the title row).
 - Add one `StackNoAccess` right before the first card with `visible: {{ !permissions.canEdit() }}`: a centred column Stack (`gap: '24px'`, `horizontalAlign` and `verticalAlign` `center`, `customCss: 'min-height: max(320px, calc(100vh - 260px));'`) holding the empty-state `Image` (`assets/images/island-with-pc-x2.webp`, same settings as the empty state in `references/blocks/table.md`) and a text Stack with a title (`heading5-m`, `#252B37`: "Недостатньо прав") and a hint (`body4-r`, `#858C99`: "У вас немає доступу до створення та редагування …", naming what the page edits). On a localised page the two texts are keys (`noAccessTitle`, `noAccessHint`) in both locale files.
-- Bind to the same `permissions.canEdit()` as the Save button, never read the permission in `init`: the user's permissions can still be loading when `init` runs, and a redirect there would send everyone away. A binding re-evaluates when they arrive.
+- Bind to the same `permissions.canEdit()` as the Save button, never read the permission in the page `init`: the user's permissions can still be loading when `init` runs, and a redirect there would send everyone away. A binding re-evaluates when they arrive.
 - This hides the UI only. The page still runs its load queries for a user without access; the real protection is the Hasura permission on the tables.
 
 Check it: the render harness runs with no permissions, so `tool.mjs render <page.json> shot.png` shows the no-access state, and the permitted state needs a copy of the page with `canEdit()` forced to `true`. For a manual check in the app, temporarily return `false` from `canEdit()` in the page's `permissions` script and revert it afterwards.
@@ -108,4 +106,4 @@ Check it: the render harness runs with no permissions, so `tool.mjs render <page
 
 ### Gate actions on the record's status in every place they appear
 
-"Assign to employee" is valid only for published roles: hide the drawer button with `visible: "{{ table.isActive(drawer.role?.status) }}"`, drop it from the row menu in the same script that builds the menu items, and return early in the script method that opens the flow.
+"Assign to employee" is valid only for published roles: hide the drawer button with `visible: "{{ table.isActive(drawer.role?.status) }}"`, drop it from the row menu in the same script that builds the menu items, and return early in the exported function that opens the flow.

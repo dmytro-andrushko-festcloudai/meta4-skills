@@ -27,7 +27,7 @@ export default page({
           name: 'TextTitle',
           verticalAlign: 'center',
           text: `{{
-  init.id ? 'Редагування товару' : 'Створення товару'
+  constants.id ? 'Редагування товару' : 'Створення товару'
 }}`,
           variant: 'heading2-m',
         }),
@@ -42,7 +42,7 @@ export default page({
   form.onSubmit()
 }}`,
           text: `{{
-  init.id ? 'Зберегти' : 'Створити товар'
+  constants.id ? 'Зберегти' : 'Створити товар'
 }}`,
           size: 'lg',
         }),
@@ -674,5 +674,6 @@ export default page({
 }}` }
 ),
   ],
-  scripts: [script('constants', constantsCode), script('init', initCode), script('breadcrumbs', breadcrumbsCode), script('options', optionsCode), script('form', formCode)],
+  init: initCode,
+  scripts: [script('constants', constantsCode), script('breadcrumbs', breadcrumbsCode), script('options', optionsCode), script('form', formCode)],
 });

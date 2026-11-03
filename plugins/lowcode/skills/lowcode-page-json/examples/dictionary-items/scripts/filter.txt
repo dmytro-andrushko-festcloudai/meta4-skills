@@ -1,102 +1,99 @@
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-return {
-  selectedFilters: { name: [], status: [] },
+export const selectedFilters = state({ name: [], status: [] });
 
-  widgetsOf(id) {
-    const groups = { name: CheckboxGroupName, status: CheckboxGroupStatus };
-    const searches = { name: InputFilterName };
+function widgetsOf(id) {
+  const groups = { name: CheckboxGroupName, status: CheckboxGroupStatus };
+  const searches = { name: InputFilterName };
 
-    return { group: groups[id], search: searches[id] };
-  },
+  return { group: groups[id], search: searches[id] };
+}
 
-  getLetterOptions(id) {
-    const search = this.widgetsOf(id).search?.value?.trim().toUpperCase() || '';
+export function getLetterOptions(id) {
+  const search = widgetsOf(id).search?.value?.trim().toUpperCase() || '';
 
-    return ALPHABET.filter((letter) => letter.includes(search)).map((letter) => ({ value: letter, label: letter }));
-  },
+  return ALPHABET.filter((letter) => letter.includes(search)).map((letter) => ({ value: letter, label: letter }));
+}
 
-  getStatusOptions() {
-    return [
-      { value: 'active', label: 'Активний' },
-      { value: 'inactive', label: 'Не активний' },
-    ];
-  },
+export function getStatusOptions() {
+  return [
+    { value: 'active', label: 'Активний' },
+    { value: 'inactive', label: 'Не активний' },
+  ];
+}
 
-  onLetterSearch() {
-  },
+export function onLetterSearch() {}
 
-  getDraft() {
-    return {
-      name: CheckboxGroupName.values || [],
-      status: CheckboxGroupStatus.values || [],
-    };
-  },
+function getDraft() {
+  return {
+    name: CheckboxGroupName.values || [],
+    status: CheckboxGroupStatus.values || [],
+  };
+}
 
-  getConditions() {
-    const { name, status } = this.selectedFilters;
-    const conditions = [];
+export function getConditions() {
+  const { name, status } = selectedFilters;
+  const conditions = [];
 
-    if (name.length > 0) {
-      conditions.push({ name: { _iregex: `^[${name.join('')}]` } });
-    }
+  if (name.length > 0) {
+    conditions.push({ name: { _iregex: `^[${name.join('')}]` } });
+  }
 
-    if (status.length === 1) {
-      conditions.push({ is_active: { _eq: status[0] === 'active' } });
-    }
+  if (status.length === 1) {
+    conditions.push({ is_active: { _eq: status[0] === 'active' } });
+  }
 
-    return conditions;
-  },
+  return conditions;
+}
 
-  onClose() {
-    CheckboxGroupName.setValues(this.selectedFilters.name);
-    CheckboxGroupStatus.setValues(this.selectedFilters.status);
-  },
+export function onClose() {
+  CheckboxGroupName.setValues(selectedFilters.name);
+  CheckboxGroupStatus.setValues(selectedFilters.status);
+}
 
-  onApply() {
-    this.selectedFilters = this.getDraft();
+export function onApply() {
+  update(selectedFilters, getDraft());
 
-    items.getData();
-  },
+  items.getData();
+}
 
-  onClearCategory(id) {
-    const { group, search } = this.widgetsOf(id);
+export function onClearCategory(id) {
+  const { group, search } = widgetsOf(id);
 
-    group?.reset();
+  group?.reset();
 
-    if (search?.value) search.setValue('');
-  },
+  if (search?.value) search.setValue('');
+}
 
-  onClear() {
-    ['name', 'status'].forEach((id) => this.onClearCategory(id));
-  },
+export function onClear() {
+  ['name', 'status'].forEach(onClearCategory);
+}
 
-  onQuickClear() {
-    this.onClear();
+export function onQuickClear() {
+  onClear();
 
-    this.selectedFilters = { name: [], status: [] };
+  update(selectedFilters, { name: [], status: [] });
 
-    items.getData();
-  },
+  items.getData();
+}
 
-  isActive() {
-    return Object.values(this.selectedFilters).some((values) => values.length > 0);
-  },
+export function isActive() {
+  return Object.values(selectedFilters).some((values) => values.length > 0);
+}
 
-  selectedQty() {
-    const total = Object.values(this.selectedFilters).reduce((sum, values) => sum + values.length, 0);
+export function selectedQty() {
+  const total = Object.values(selectedFilters).reduce((sum, values) => sum + values.length, 0);
 
-    return total > 99 ? '99+' : total;
-  },
+  return total > 99 ? '99+' : total;
+}
 
-  isEmpty() {
-    return Object.values(this.getDraft()).every((values) => values.length === 0);
-  },
+export function isEmpty() {
+  return Object.values(getDraft()).every((values) => values.length === 0);
+}
 
-  isChanged() {
-    const draft = this.getDraft();
-    const isSame = (a, b) => a.length === b.length && a.every((value) => b.includes(value));
+export function isChanged() {
+  const draft = getDraft();
+  const isSame = (a, b) => a.length === b.length && a.every((value) => b.includes(value));
 
-    return Object.keys(this.selectedFilters).some((key) => !isSame(draft[key], this.selectedFilters[key]));
-  },
-};
+  return Object.keys(selectedFilters).some((key) => !isSame(draft[key], selectedFilters[key]));
+}
