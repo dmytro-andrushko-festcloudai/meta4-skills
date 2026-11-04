@@ -119,7 +119,7 @@ const visit = (n: PageNode, path: string) => {
   if (!shape) return void problems.push(`${path}: unknown block "${n.type}"`);
 
   const info = shapeInfo(shape);
-  const known = new Set(Object.keys(info.defaults));
+  const known = new Set([...Object.keys(info.defaults), ...Object.keys(shape)]);
   const slotInfos = slotsOf(shape);
   // A slot inside an array field (Tabs `tabs[].content`) is keyed by its container.
   const slots = new Set(slotInfos.map((slot) => slot.container ?? slot.key));

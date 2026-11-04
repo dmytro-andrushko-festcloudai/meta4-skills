@@ -56,9 +56,11 @@ const buildPage = async (entry, out) => {
     build: {
       stdin: {
         contents: `import page from ${JSON.stringify(path.resolve(entry))};
-            import { writeFileSync } from 'node:fs';
-            writeFileSync(process.argv[2], JSON.stringify(page, null, 2) + '\\n');
-            console.log('written', process.argv[2]);`,
+            import { keepIds } from ${JSON.stringify(path.join(here, 'stable-ids.ts'))};
+            import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+            const previous = existsSync(process.argv[2]) ? JSON.parse(readFileSync(process.argv[2], 'utf8')) : null;
+            writeFileSync(process.argv[2], JSON.stringify(keepIds(page, previous), null, 2) + '\\n');
+            console.log('written', process.argv[2], previous ? '(ids of the existing file kept)' : '');`,
         loader: 'ts',
         resolveDir: root,
       },

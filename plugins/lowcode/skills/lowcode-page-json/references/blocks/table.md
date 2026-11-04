@@ -44,14 +44,14 @@ Selected rows in a picker: `& tbody tr:has(.Mui-checked) > td { background-color
 
 Always add it, on every list page and every `Table`, `List` or `Repeater` in a drawer, modal or tab, even when the design does not draw it. The three blocks follow the same rule and all read `data`; a `List` and a `Repeater` have no `columns`, their rows are the `children` template. Put the empty Stack right after the block in the same parent, give the empty Stack the empty condition as `visible` and the block its negation. Without it an empty result is a bare header row. Reference: `StackAccessEmpty` in `apps/lowcode/src/pages/security-service/schemas/access.json` (the access drawer).
 
-The table and the empty Stack are mutually exclusive, driven by one exported function:
-- the empty Stack is `visible: "{{ table.isEmpty() }}"`, the Table is `visible: "{{ !table.isEmpty() }}"` (the access page adds a readiness check, `access.isReady() && ...`, so nothing flashes before the data is there);
-- a server-paged list is empty only once the query has answered, so check loading and data first: `export function isEmpty() { return !getItems.loading && Boolean(getItems.data) && (getItems.data.total?.aggregate?.count ?? 0) === 0; }`. A client-side or tab table uses its own row count (`tab === 'selected' && getCount() === 0`);
+The table and the empty Stack are mutually exclusive, driven by one derived export (`export const isEmpty = ...`, no parentheses in bindings):
+- the empty Stack is `visible: "{{ table.isEmpty }}"`, the Table is `visible: "{{ !table.isEmpty }}"` (the access page adds a readiness check, `access.isReady && ...`, so nothing flashes before the data is there);
+- a server-paged list is empty only once the query has answered, so check loading and data first: `export const isEmpty = !getItems.loading && Boolean(getItems.data) && (getItems.data.total?.aggregate?.count ?? 0) === 0;`. A client-side or tab table uses its own row count (`tab === 'selected' && getCount() === 0`);
 - a search or filter that matches nothing is also empty, so it shows the same state; keep the toolbar (search, sort, filter) above it visible so the user can clear it;
-- write `isEmpty()` for every state the table can be in, not only the one you thought of first. A drawer table with an "all" tab and a "selected" tab needs both (`tab === 'selected' ? count === 0 : loaded && !loading && rows.length === 0`, with a `loaded` flag reset when the panel opens), otherwise searching the "all" tab for a string with no match leaves a bare header row. A table with no script method can inline the condition in `visible`: `{{ !loading && rows.length === 0 }}` on the empty Stack and its negation on the Table. Give the empty Stack's children names that cannot clash with the page's other blocks (`TextPeopleEmptyTitle`, not `TextPeopleTitle`; `validate` reports a duplicate). A search or filter that matched nothing needs a hint about changing it (`common.emptyHint`: "Спробуйте змінити пошук або фільтр"), not about creating data;
+- write `isEmpty` for every state the table can be in, not only the one you thought of first. A drawer table with an "all" tab and a "selected" tab needs both (`tab === 'selected' ? count === 0 : loaded && !loading && rows.length === 0`, with a `loaded` flag reset when the panel opens), otherwise searching the "all" tab for a string with no match leaves a bare header row. A table with no script method can inline the condition in `visible`: `{{ !loading && rows.length === 0 }}` on the empty Stack and its negation on the Table. Give the empty Stack's children names that cannot clash with the page's other blocks (`TextPeopleEmptyTitle`, not `TextPeopleTitle`; `validate` reports a duplicate). A search or filter that matched nothing needs a hint about changing it (`common.emptyHint`: "Спробуйте змінити пошук або фільтр"), not about creating data;
 - the title and hint are text, so on a localised page they are keys (`emptyTitle`, `emptyHint`) in both locale files; take the hint from the design, or use one that says what to do next ("Створіть першу одиницю виміру" only when the create button is visible to this user).
 
-Build: a centred column Stack after the table, `gap: '24px'`, with `horizontalAlign: 'center'` and `verticalAlign: 'center'`, holding an `Image` (`src: 'assets/images/island-with-pc-x2.webp'`, `widthMode: 'hug'`, `size: '284'`, `fit: 'contain'`, `customCss: '& img {\n  height: 240px;\n}'` because the Image block only takes a square size and the asset is 334:282) and a text Stack (`gap: '4px'`, centred): title `heading5-m` `#252B37`, hint `body4-r` `#858C99`. Set `widthMode: 'hug'` on the Image and on both Texts: a Text defaults to `fill` and then sits at the left edge even inside a centred Stack (render it with the empty Stack forced visible to check). Show it with an exported function (`export function isEmpty() { return tab === 'selected' && getCount() === 0; }`) and hide the table with its negation. Centring vertically:
+Build: a centred column Stack after the table, `gap: '24px'`, with `horizontalAlign: 'center'` and `verticalAlign: 'center'`, holding an `Image` (`src: 'assets/images/island-with-pc-x2.webp'`, `widthMode: 'hug'`, `size: '284'`, `fit: 'contain'`, `customCss: '& img {\n  height: 240px;\n}'` because the Image block only takes a square size and the asset is 334:282) and a text Stack (`gap: '4px'`, centred): title `heading5-m` `#252B37`, hint `body4-r` `#858C99`. Set `widthMode: 'hug'` on the Image and on both Texts: a Text defaults to `fill` and then sits at the left edge even inside a centred Stack (render it with the empty Stack forced visible to check). Show it with a derived export (`export const isEmpty = tab === 'selected' && getCount() === 0;`) and hide the table with its negation. Centring vertically:
 - in a drawer whose content Stack scrolls (`references/blocks/overlays.md`): `heightMode: 'fill'` on the empty Stack, and add `box-sizing: border-box;\n  min-height: 100%;` to the content Stack's `& > div` rule, otherwise the slot hugs its content and `fill` has nothing to grow into;
 - in a drawer or tab where every Stack hugs (a `Tabs` block between the header and the content, as in the access drawer): the `fill` chain does not reach the empty Stack, so use the viewport as in the list page, with the height above it: `customCss: 'min-height: max(320px, calc(100vh - 460px));'` (460px is the drawer header, info rows, tab strip and footer; adjust it when the header grows). `max()` keeps a floor on short screens. A fixed `min-height: 320px` leaves the state at the top of a tall drawer;
 - on a list page whose Stacks all hug (title row, toolbar, table): `customCss: 'min-height: max(320px, calc(100vh - 260px));'` on the empty Stack with `verticalAlign: 'center'`, no padding. 260px is the space above it: page title and toolbar (about 150px) plus the shell bar and page padding; checked in the shell on the `/uom` page, where it sat centred. A page with a taller header takes a larger number; do not use fixed top padding, it only centres one viewport height.
@@ -61,6 +61,54 @@ Centring needs both parts: `horizontalAlign: 'center'` on the Stack and `widthMo
 Check it before reporting: the render harness has no query data, so the empty Stack stays hidden. Copy the page JSON, set the empty Stack `visible` to `{{ true }}` and the Table `visible` to `{{ false }}`, and `tool.mjs render` that copy. The viewport is the render's `--height`, so judge vertical centring in the shell, not in the PNG.
 
 The shell serves `shared/assets/src/lib/images` at `assets/images/`, so the image loads inside the shell, not on the standalone lowcode dev server.
+
+### Empty state example (builder and js file)
+
+Write it as a js file module (`references/script-files.md`): two derived exports, `hasQuery` (the user typed a search or applied a filter, so the hint can say "nothing found" or "nothing created yet") and `isEmpty` (the query answered with no rows, search and filters included). They are values, not functions: a top-level `export const` that reads a query, a block or another file recomputes by itself, so the binding is `table.isEmpty` without parentheses and needs no manual refresh. Use `export const x = state(...)` and `update(x, ...)` only for what the user changes (a tab, a flag), and `init` for the first load, never for these two:
+
+```js
+export const hasQuery = Boolean(InputSearch.value?.trim()) || filter.getConditions().length > 0;
+
+export const isEmpty = Boolean(getItems.data) && !getItems.loading && (getItems.data.total?.aggregate?.count ?? 0) === 0;
+```
+
+The page, right after the Table (or List, or Repeater) in the same parent, with the same `name`s every time so a rebuild keeps the ids:
+
+```ts
+node('Table', { /* ... */ visible: '{{ !table.isEmpty }}' }),
+stack(
+  {
+    gap: '24px',
+    horizontalAlign: 'center',
+    verticalAlign: 'center',
+    customCss: 'min-height: max(320px, calc(100vh - 260px));',
+    visible: '{{ table.isEmpty }}',
+    name: 'StackItemsEmpty',
+  },
+  [
+    node('Image', {
+      src: 'assets/images/island-with-pc-x2.webp',
+      size: '284',
+      fit: 'contain',
+      widthMode: 'hug',
+      customCss: '& img {\n  height: 240px;\n}',
+      name: 'ImageItemsEmpty',
+    }),
+    stack({ gap: '4px', horizontalAlign: 'center', name: 'StackItemsEmptyText' }, [
+      node('Text', { text: "{{ i18n.t('common.emptyState') }}", variant: 'heading5-m', color: '#252B37', widthMode: 'hug', name: 'TextItemsEmptyTitle' }),
+      node('Text', {
+        text: "{{ table.hasQuery ? i18n.t('common.emptyHint') : i18n.t('items.createFirst') }}",
+        variant: 'body4-r',
+        color: '#858C99',
+        widthMode: 'hug',
+        name: 'TextItemsEmptyHint',
+      }),
+    ]),
+  ]
+),
+```
+
+A List or a Repeater is the same: swap the block, derive `isEmpty` from that block's data (`getItems.data.items.length === 0`), and keep the toolbar above both. Show the create hint (`items.createFirst`) only when the create button is visible to this user, otherwise show nothing or the generic hint. If the page is not localised, put the text inline instead of the `i18n` keys.
 
 ## Table with a header row
 
