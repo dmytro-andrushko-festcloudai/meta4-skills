@@ -49,10 +49,15 @@ Conventions from `legal-entities`: `constants` holds `GRAPHQL_URL` (navigation i
 
 ```js
 export const GRAPHQL_URL = app.env.GRAPHQL_URL;
-export const SECURITY_SERVICE_URL = app.env.SECURITY_SERVICE_URL || 'https://internal.dev.api.festcloud.ai/security-service';
+export const SECURITY_SERVICE_URL = app.platformUrl('security-service');
 ```
 
-GraphQL queries use `"endpoint": "{{ constants.GRAPHQL_URL }}"`; REST queries `"url": "{{ constants.SECURITY_SERVICE_URL }}/api/v1/roles?role={{ encodeURIComponent(params.role) }}"` (inside a template-literal URL: `${constants.SECURITY_SERVICE_URL}`). `app.env` exposes `GRAPHQL_URL`, `GRAPHQL_WS_URL` and `SECURITY_SERVICE_URL` (from `NX_PUBLIC_JWT_SERVICE_API_URL`); never hardcode a host in a query. Security-service REST: activate `POST /api/v1/roles?role=<name>`, delete a published role `DELETE /api/v1/roles?role=<name>` (not the `securityservice_deleteRole` Hasura action); a non-2xx response becomes `result.error`.
+GraphQL queries use `"endpoint": "{{ constants.GRAPHQL_URL }}"`; REST queries `"url": "{{ constants.SECURITY_SERVICE_URL }}/api/v1/roles?role={{ encodeURIComponent(params.role) }}"` (inside a template-literal URL: `${constants.SECURITY_SERVICE_URL}`). Never hardcode a host in a query or in `constants` — always derive it from `app`:
+- `app.env.GRAPHQL_URL` / `app.env.GRAPHQL_WS_URL` for the GraphQL endpoint (the only two always pre-wired).
+- `app.platformUrl(service)` for any other platform service by name (`app.platformUrl('security-service')`) — prefer this over `app.env.SECURITY_SERVICE_URL`, which is just that same call pre-wired for one service and not guaranteed to stay the only one.
+- `app.serviceUrl(appName, options)` for a service fabric application's own URL (`app.serviceUrl('orders')`; `{ protocol: 'wss' }` for a subscription endpoint). The tenant it resolves is the stand's tenant, not `app.user.tenant`.
+
+Security-service REST: activate `POST /api/v1/roles?role=<name>`, delete a published role `DELETE /api/v1/roles?role=<name>` (not the `securityservice_deleteRole` Hasura action); a non-2xx response becomes `result.error`.
 
 **Editing a published (active) role never touches it directly** (old Appsmith flow, `role` in `security-service/schemas/role-form.json`): look up a `DRAFT` role with the same name (`getRoleDraft`); if one exists, diff the selection against the draft's own permissions and update the draft; otherwise create a new `DRAFT` with that name and all selected permissions. Only Activate then calls the activate endpoint with the name, and the backend swaps the draft in. When the form opens on a published role that has a draft, load the draft's permissions.
 
@@ -60,7 +65,7 @@ Blocked identifiers apply here too (see SKILL.md). Avoid naming a local `parent`
 
 ## The `app` object
 
-Readable in bindings: `app.URL` (`.pathname`, `.query`, `.params`, `.base`), `app.mode` (`'editor'` or `'viewer'`), `app.token`, `app.user` (`.permissions`), `app.vars`, and `app.hasPermission(requirements)`. Only in scripts and actions: `app.copyToClipboard(text)` (async; was `app.copy`, so pages written earlier need the new name), `app.navigate(to, { replace, newTab })`, `app.setSearchParams(patch)`, `app.setVar(name, value)`, `app.showAlert(message, severity)`. Navigate with relative paths (below); a full shell path only to leave the page's own area.
+Readable in bindings: `app.URL` (`.pathname`, `.query`, `.params`, `.base`), `app.mode` (`'editor'` or `'viewer'`), `app.token`, `app.user` (`.permissions`), `app.vars`, `app.hasPermission(requirements)`, `app.platformUrl(service)` (a platform service's URL by name, e.g. `app.platformUrl('security-service')`), and `app.serviceUrl(appName, options)` (a service fabric application's URL by name, e.g. `app.serviceUrl('orders')`; `{ protocol: 'wss' }` for a subscription endpoint — the tenant resolved is the stand's, not `app.user.tenant`). Only in scripts and actions: `app.copyToClipboard(text)` (async; was `app.copy`, so pages written earlier need the new name), `app.navigate(to, { replace, newTab })`, `app.setSearchParams(patch)`, `app.setVar(name, value)`, `app.showAlert(message, severity)`. Navigate with relative paths (below); a full shell path only to leave the page's own area.
 
 ## Navigation
 
