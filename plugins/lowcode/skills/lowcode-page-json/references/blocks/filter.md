@@ -14,6 +14,10 @@ The roles Author filter is the letters A-Z and А-Я; on Apply a script resolves
 
 If `isSame()`/`isChanged()` reads the search text, the first letter typed flips `disableApply`/`disableClear`. The Filter re-renders, the category panel is rebuilt, and the input loses focus after one character. Keep draft, `EMPTY`, `isSame()`, `selectedQty()` and `restore()` to the ticked values (`CheckboxGroupX.values`, `RadioGroupX.value`, dates). Apply filters by those values only, not by the typed text. Clear a search box only in `onClearCategory`/`resetSearch`. Same as `filter` in `security-service/schemas/access.json` and `security-roles.json`.
 
+## `getDraft()` returns copies of the CheckboxGroup arrays
+
+`update(applied, getDraft())` stores the draft in state. If `getDraft()` returns `CheckboxGroupX.values` itself, the same array sits in two places of state and the engine throws (`an object sits in one place of state`). Return `[...(CheckboxGroupX.values || [])]` for every list. The draft keeps the same content, so `isSame()` and the buttons behave as before. Passing `applied.x` back with `setValues(...)` needs no copy, the block copies it.
+
 ## Reset the search boxes when the user switches category
 
 Bind the Filter's `onCategoryChange` to `{{ filter.resetSearch() }}`, which sets every category's search `Input` to `''`. Leave the ticked values alone, so switching tabs does not drop a selection.

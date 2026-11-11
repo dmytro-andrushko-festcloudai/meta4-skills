@@ -35,7 +35,7 @@ Stack is the only container: `direction` (`row` / `column`), `gap`, `wrap`, `bgC
 | Tabs over a list | `Tabs` | `tabs: [{ id, label, value, content: [] }]`, `defaultValue`, `onChange`; `showToolbar` + `toolbar` slot for the icons on the right. Only the active tab's `content` renders and an empty content is still 250px tall, so each tab holds its own List (unique names) and one query filters on `Tabs.value`. Give the first block in each tab `margin: '12px 0 0'` for the gap under the tab strip, as in taxonomies (`TabsView`) |
 | Details side panel | `Drawer` | `anchor: 'right'`, `width`, `setOpen()`; a script keeps the opened item (`details.item`) and the drawer binds to it. Start it with the header divider below. Live example: `taxonomies/schemas/list.json` (`DrawerDetails`). With bottom action buttons and a long list, use `references/blocks/overlays.md` instead (`security-roles.json`, `DrawerRole`, `DrawerAccess`) |
 | Page trail | `Breadcrumbs` | items come from a script, `onNavigate(id)` |
-| Hierarchy | `Tree` | see `taxonomy-merge` |
+| Hierarchy | `Tree` | a Filter Tree with search, first root selected and panel expansion is in `blocks/tree.md`; examples: the `workgroups` js file of `people/specification/list.json` and `people/position/list.json` |
 | Form fields | `Input`, `Select`, `Checkbox`, `RadioGroup` | `valid` / `dirty` / `reset()` feed the submit state, see `nomenclatures-form` |
 
 Pagination props on `Table` and `List`: `enablePagination`, `serverSidePagination`, `pageSize`, `totalCount`, `onPageChange`, `onPageSizeChange`. **Repeater has no pagination**: use `List` for a paginated card list. To hide pagination when everything fits on one page, bind `enablePagination` to `total > <smallest page size>` (15); comparing against the selected `pageSize` hides the size picker after the user picks a larger size, and they cannot switch back.
@@ -61,6 +61,7 @@ Read the file of every block the page uses before building it; each rule is a sh
 | Modal and Drawer | `blocks/overlays.md` | close button, fixed header and actions with scrolling fields, pinned drawer footer, opening one from another |
 | Filter | `blocks/filter.md` | category panels, static option lists, draft vs applied state, resetting search |
 | Tabs | `blocks/tabs.md` | content padding, a tab strip alone, search next to tabs |
+| Tree | `blocks/tree.md` | Filter Tree: first root selected, search under the header with its parent path, restoring expanded branches, panel expansion |
 | Forms and inputs | `blocks/forms.md` | blocks that must not bind to each other, textarea |
 | Localization | `blocks/localization.md` | `app.libraries.i18n`, dictionaries |
 | Data and queries | `data-and-queries.md` | enum values, no secret in page JSON, script state and mock lists |

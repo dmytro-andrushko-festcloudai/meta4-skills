@@ -27,6 +27,23 @@ The Drawer draws its own close button in the top corner, so a title placed first
 
 Two open drawers stack their backdrops. Keep what the second one needs before closing: `const current = role; DrawerRole.setOpen(false); access.open(current);` (`role` is the drawer file's state).
 
+## A drawer opens a modal (edit, duplicate, delete): close the drawer, then open the modal
+
+A modal stacked over an open drawer leaves the drawer behind it, and after the modal closes the user lands back in a drawer they already acted on (a deleted record's drawer shows blank). Close the drawer first, then open the modal. Do it as the first line of the exported function that opens the modal, so the table row icons and the drawer buttons share one code path and no button needs a second `onClick` statement (a binding holds one expression):
+
+```js
+export function openEdit(item) {
+  if (!item) return;
+
+  DrawerOccupation.setOpen(false);
+  update(mode, 'edit');
+  update(targetId, item.fcp_id);
+  ModalOccupation.setOpen(true);
+}
+```
+
+Take the record from the argument and store it (`update(targetId, item.fcp_id)`) in the same function: the drawer reads its record from that state, so nothing else needs to survive the close. The row-icon call with the drawer already closed is a harmless no-op. Apply it to every function a drawer button calls to open a modal (`openEdit`, `openDuplicate`, `askDelete`); the delete confirm then needs no extra close on success.
+
 ## A drawer footer always has at least one button
 
 When permissions or status hide every action, show `Закрити` (outlined, `lg`, `onClick: DrawerX.setOpen(false)`), visible on the negation of every other button's condition, and update that condition whenever a footer button is added.
