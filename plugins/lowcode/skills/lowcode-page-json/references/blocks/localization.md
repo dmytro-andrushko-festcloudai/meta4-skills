@@ -29,14 +29,14 @@ The `localization` folder holds exactly three js files, in this order:
 
 | Js file | Content |
 |---|---|
-| `localeUk` | returns the Ukrainian dictionary, nested |
-| `localeEn` | returns the English dictionary, same keys |
-| `i18n` | flattens both, registers them and exposes `t` |
+| `localeUk` | exports the Ukrainian dictionary as `messages`, nested |
+| `localeEn` | exports the English dictionary as `messages`, same keys |
+| `i18n` | flattens both, registers them and exports `t` |
 
-The locale files only return an object; no logic, no `init` call:
+The locale files only export an object; no logic, no `init` call:
 
 ```js
-return {
+export const messages = {
   page: {
     title: 'Менеджер таксономії',
     subtitle: 'Універсальний переглядач таксономії',
@@ -71,11 +71,11 @@ const flatten = (dictionary, prefix = '') =>
       : { ...result, [path]: value };
   }, {});
 
-app.libraries.i18n.init({ uk: flatten(localeUk), en: flatten(localeEn) });
+app.libraries.i18n.init({ uk: flatten(localeUk.messages), en: flatten(localeEn.messages) });
 
-return {
-  t: (key, vars) => app.libraries.i18n.t(key, vars),
-};
+export function t(key, vars) {
+  return app.libraries.i18n.t(key, vars);
+}
 ```
 
 Everything else calls `i18n.t(...)`:
@@ -83,7 +83,7 @@ Everything else calls `i18n.t(...)`:
 - bindings: `{{ i18n.t('page.title') }}`, `{{ i18n.t('tree.nodesCount', { count: tree.getCount() }) }}`;
 - scripts: `i18n.t('createForm.created', { name })`, or `const { t } = i18n;` at the top of a function that translates many strings.
 
-The page `init` (`root.props.init`) does not register dictionaries; it only starts loading data (`references/script-files.md`). The locale files and `i18n` are plain scripts: they return an object and need no `export`.
+The page `init` (`root.props.init`) does not register dictionaries; it only starts loading data (`references/script-files.md`). The locale files and `i18n` are file-mode scripts like every other js file; a top-level `return` is refused by the engine.
 
 ## Key layout
 
