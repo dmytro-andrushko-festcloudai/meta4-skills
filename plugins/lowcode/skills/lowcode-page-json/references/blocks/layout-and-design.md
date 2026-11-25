@@ -55,9 +55,22 @@ the design's fixed columns (for example 304px, 240px, 300px) are `widthMode: 'fi
 
 (`forwardDisabled: true`) and bind `onBack` to the same navigation as the parent crumb; an empty `onBack` leaves a dead arrow.
 
+## Icon colour: an Icon with onClick ignores the colour of its wrapper
+
+An `Icon` with `onClick` renders as an `IconButton`, which sets its own colour on the button (`secondary.default`, `#58606A`). A `color: var(...)` in the Icon's `customCss` lands on the wrapper and never reaches the button, so the icon stays darker than the design. Style the button inside:
+
+```css
+cursor: pointer;
+& button {
+  color: var(--color-secondary-hover);
+}
+```
+
+The design's header icons (search, add, expand tree) are `#858C99`, which is the token `secondary.hover` (`grey_500`, `#858E99`), not `secondary.default`. Give every icon of the same header the same `customCss`, so they match each other and the title text. The `&:hover` colour of the button stays the component's own, because a pseudo-class rule is more specific than `& button`. An `Icon` without `onClick` is a plain glyph that follows the wrapper `color`, and `size: 'sm'` is 16px (`md` 20px, `lg` 48px), the size used for header icons.
+
 ## Custom icons
 
-that are not Phosphor names live in `shared/ui-v2/src/lib/icon/custom-icons.ts`: `Duplicate` (the "duplicate/copy row" icon in the designs), `Copy`, `FCFunnelActive`, `FCSortAscendingActive`, `Diia`. Use `Duplicate` for a duplicate action, not Phosphor `Copy`.
+that are not Phosphor names live in `shared/ui-v2/src/lib/icon/custom-icons.ts`: `Duplicate` (the "duplicate/copy row" icon in the designs), `Copy`, `FCFunnelActive`, `FCSortAscendingActive`, `Diia`, `ExpandTree` and `CollapseTree` (the tree panel expand toggle, see `references/blocks/tree.md`). Use `Duplicate` for a duplicate action, not Phosphor `Copy`.
 
 ## Rendering a route with an id
 
